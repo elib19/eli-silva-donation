@@ -113,24 +113,25 @@ add_shortcode('donation_form', function() {
                 <option value="<?= $state ?>"><?= $state ?></option>
             <?php endforeach; ?>
         </select>
-        <label for="type">Tipo de Instituição:</label>
-        <select name="type" required>
+        <label for="type">Tipo de Instituição:</label><br>
+        <select name="type" required><br>
             <option value="">Selecione o tipo</option>
             <option value="hospital_de_cancer">Hospital de Câncer</option>
             <option value="igreja">Igreja</option>
             <option value="instituicao_caridade">Instituição de Caridade</option>
             <option value="outro">Outro</option>
-        </select>
-        <label for="pix_type">Tipo de Chave PIX:</label>
-        <select name="pix_type" required>
+        </select><br>
+        <label for="pix_type">Tipo de Chave PIX:</label><br>
+        <select name="pix_type" required><br>
+            <option value="">Selecione o tipo</option>
             <option value="cnpj">CNPJ</option>
             <option value="phone">Número de Celular</option>
             <option value="random">Chave Aleatória</option>
-        </select>
-        <label for="pix_key">Chave PIX:</label>
-        <input type="text" name="pix_key" required>
-        <label for="email">E-mail:</label>
-        <input type="email" name="email" required>
+        </select><br>
+        <label for="pix_key">Chave PIX:</label><br>
+        <input type="text" name="pix_key" required><br>
+        <label for="email">E-mail:</label><br>
+        <input type="email" name="email" required><br>
         <button type="submit">Cadastrar</button>
     </form>
     <?php
