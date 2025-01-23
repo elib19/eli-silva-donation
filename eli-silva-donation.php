@@ -141,53 +141,45 @@ add_shortcode('donation_form', function() {
 // Página no admin para gerenciar as doações
 add_action('admin_menu', function() {
     add_menu_page('Gerenciar Doações', 'Doações', 'manage_options', 'manage_donations', function() {
-        $orders = wc_get_orders(['status' => 'completed', 'meta_key' => '_donation_institution']);
-
+        $institutions = get_option('donation_institutions', []);
+        
         echo '<table class="wp-list-table widefat fixed striped">';
-        echo '<thead><tr><th>Cliente</th><th>Instituição</th><th>Chave PIX</th><th>Valor</th><th>Data</th><th>Status</th></tr></thead><tbody>';
-
-        foreach ($orders as $order) {
-            $institution_name = get_post_meta($order->get_id(), '_donation_institution', true);
-            $institutions = get_option('donation_institutions', []);
-
-            $institution = array_filter($institutions, function($inst) use ($institution_name) {
-                return $inst['name'] === $institution_name;
-            });
-            $institution = reset($institution);
-
+        echo '<thead><tr><th>Instituição</th><th>CNPJ</th><th>Tipo</th><th>Estado</th><th>Chave PIX</th><th>Ações</th></tr></thead><tbody>';
+        
+        foreach ($institutions as $institution) {
             echo '<tr>';
-            echo '<td>' . esc_html($order->get_billing_first_name()) . '</td>';
-            echo '<td>' . esc_html($institution_name) . '</td>';
+            echo '<td><a href="' . admin_url('admin.php?page=manage_donations&view_institution=' . urlencode($institution['name'])) . '">' . esc_html($institution['name']) . '</a></td>';
+            echo '<td>' . esc_html($institution['cnpj']) . '</td>';
+            echo '<td>' . esc_html($institution['type']) . '</td>';
+            echo '<td>' . esc_html($institution['state']) . '</td>';
             echo '<td>' . esc_html($institution['pix_key']) . '</td>';
-            echo '<td>R$ ' . number_format($order->get_total() * 0.3, 2, ',', '.') . '</td>';
-            echo '<td>' . wc_format_datetime($order->get_date_created()) . '</td>';
-            echo '<td>Pendente</td>';
+            echo '<td><a href="' . admin_url('admin.php?page=manage_donations&view_institution=' . urlencode($institution['name'])) . '">Ver</a></td>';
             echo '</tr>';
         }
 
         echo '</tbody></table>';
+        
+        // Ver informações da instituição ao clicar
+        if (isset($_GET['view_institution'])) {
+            $institution_name = sanitize_text_field($_GET['view_institution']);
+            $institution = array_filter($institutions, function($inst) use ($institution_name) {
+                return $inst['name'] === $institution_name;
+            });
+            $institution = reset($institution);
+            
+            if ($institution) {
+                echo '<h3>Informações da Instituição</h3>';
+                echo '<p><strong>Nome:</strong> ' . esc_html($institution['name']) . '</p>';
+                echo '<p><strong>CNPJ:</strong> ' . esc_html($institution['cnpj']) . '</p>';
+                echo '<p><strong>Endereço:</strong> ' . esc_html($institution['address']) . '</p>';
+                echo '<p><strong>Estado:</strong> ' . esc_html($institution['state']) . '</p>';
+                echo '<p><strong>Tipo:</strong> ' . esc_html($institution['type']) . '</p>';
+                echo '<p><strong>Tipo de Chave PIX:</strong> ' . esc_html($institution['pix_type']) . '</p>';
+                echo '<p><strong>Chave PIX:</strong> ' . esc_html($institution['pix_key']) . '</p>';
+                echo '<p><strong>E-mail:</strong> ' . esc_html($institution['email']) . '</p>';
+            }
+        }
     });
-});
-
-// Adiciona página de cadastro de instituição no admin
-add_action('init', function() {
-    add_rewrite_rule('^instituicao-cadastrar/?$', 'index.php?donation_form=1', 'top');
-});
-
-// Redireciona para o shortcode da página de cadastro de instituição
-add_filter('query_vars', function($vars) {
-    $vars[] = 'donation_form';
-    return $vars;
-});
-
-add_action('template_redirect', function() {
-    $donation_form = get_query_var('donation_form');
-    if ($donation_form) {
-        echo do_shortcode('[donation_form]');
-        exit;
-    }
-});
-
 // Garantir que o CSS e JS já criados estejam funcionando
 add_action('wp_enqueue_scripts', function() {
     wp_enqueue_style('meu-estilo', plugin_dir_url(__FILE__) .'assets/css/eli-silva-donation.css');
