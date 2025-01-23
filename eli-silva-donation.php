@@ -100,19 +100,19 @@ add_shortcode('donation_form', function() {
     ?>
     <form method="POST">
         <input type="hidden" name="donation_form_submitted" value="1">
-        <label for="name">Nome da Instituição:</label>
-        <input type="text" name="name" required>
-        <label for="cnpj">CNPJ:</label>
-        <input type="text" name="cnpj" required>
-        <label for="address">Endereço:</label>
-        <input type="text" name="address" required>
-        <label for="state">Estado:</label>
-        <select name="state" required>
+        <label for="name">Nome da Instituição:</label><br>
+        <input type="text" name="name" required><br>
+        <label for="cnpj">CNPJ:</label><br>
+        <input type="text" name="cnpj" required><br>
+        <label for="address">Endereço:</label><br>
+        <input type="text" name="address" required><br>
+        <label for="state">Estado:</label><br>
+        <select name="state" required><br>
             <option value="">Selecione um estado</option>
             <?php foreach (["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"] as $state): ?>
                 <option value="<?= $state ?>"><?= $state ?></option>
             <?php endforeach; ?>
-        </select>
+        </select><br>
         <label for="type">Tipo de Instituição:</label><br>
         <select name="type" required><br>
             <option value="">Selecione o tipo</option>
