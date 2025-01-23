@@ -57,22 +57,22 @@ add_action('woocommerce_order_status_completed', function($order_id) {
     // Envia e-mail para a instituição
     $to_institution = $institution['email'];
     $subject_institution = 'Nova Doação Recebida';
-    $message_institution = "Você recebeu uma doação através do site.\n\n" .
-        "Cliente: " . $order->get_billing_first_name() . "\n" .
-        "Produto: " . implode(', ', wp_list_pluck($order->get_items(), 'name')) . "\n" .
-        "Valor da Doação: R$ " . number_format($donation_value, 2, ',', '.') . "\n" .
-        "Data: " . wc_format_datetime($order->get_date_created()) . "\n" .
+    $message_institution = "Você recebeu uma doação através do site.\n\n" . 
+        "Cliente: " . $order->get_billing_first_name() . "\n" . 
+        "Produto: " . implode(', ', wp_list_pluck($order->get_items(), 'name')) . "\n" . 
+        "Valor da Doação: R$ " . number_format($donation_value, 2, ',', '.') . "\n" . 
+        "Data: " . wc_format_datetime($order->get_date_created()) . "\n" . 
         "Pagamento será efetuado em 15 dias.";
     wp_mail($to_institution, $subject_institution, $message_institution);
 
     // Envia e-mail para o administrador
     $admin_email = get_option('admin_email');
     $subject_admin = 'Nova Doação Realizada';
-    $message_admin = "Uma nova compra foi realizada com doação.\n\n" .
-        "Cliente: " . $order->get_billing_first_name() . "\n" .
-        "Instituição Beneficiada: " . $institution_name . "\n" .
-        "Valor da Doação: R$ " . number_format($donation_value, 2, ',', '.') . "\n" .
-        "Chave PIX da Instituição: " . $institution['pix_key'] . "\n" .
+    $message_admin = "Uma nova compra foi realizada com doação.\n\n" . 
+        "Cliente: " . $order->get_billing_first_name() . "\n" . 
+        "Instituição Beneficiada: " . $institution_name . "\n" . 
+        "Valor da Doação: R$ " . number_format($donation_value, 2, ',', '.') . "\n" . 
+        "Chave PIX da Instituição: " . $institution['pix_key'] . "\n" . 
         "Data: " . wc_format_datetime($order->get_date_created());
     wp_mail($admin_email, $subject_admin, $message_admin);
 });
@@ -169,11 +169,28 @@ add_action('admin_menu', function() {
     });
 });
 
+// Adiciona página de cadastro de instituição no admin
+add_action('init', function() {
+    add_rewrite_rule('^instituicao-cadastrar/?$', 'index.php?donation_form=1', 'top');
+});
+
+// Redireciona para o shortcode da página de cadastro de instituição
+add_filter('query_vars', function($vars) {
+    $vars[] = 'donation_form';
+    return $vars;
+});
+
+add_action('template_redirect', function() {
+    $donation_form = get_query_var('donation_form');
+    if ($donation_form) {
+        echo do_shortcode('[donation_form]');
+        exit;
+    }
+});
+
 // Garantir que o CSS e JS já criados estejam funcionando
 add_action('wp_enqueue_scripts', function() {
-    // Enqueue seu CSS
     wp_enqueue_style('meu-estilo', plugin_dir_url(__FILE__) .'assets/css/eli-silva-donation.css');
-    
-    // Enqueue seu JS
     wp_enqueue_script('meu-script', plugin_dir_url(__FILE__) .'assets/js/eli-silva-donation.js', [], false, true);
 });
+?>
