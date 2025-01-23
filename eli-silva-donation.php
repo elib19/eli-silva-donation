@@ -171,8 +171,8 @@ add_action('admin_menu', function() {
 // Garantir que o CSS e JS já criados estejam funcionando
 add_action('wp_enqueue_scripts', function() {
     // Enqueue seu CSS
-    wp_enqueue_style('meu-estilo', plugin_dir_url(__FILE__) . 'assets/css/eli-silva-donation.css');
+    wp_enqueue_style('meu-estilo', plugin_dir_url(__FILE__) .'assets/css/eli-silva-donation.css');
     
     // Enqueue seu JS
-    wp_enqueue_script('meu-script', plugin_dir_url(__FILE__) . 'js/meu-script.js', [], false, true);
+    wp_enqueue_script('meu-script', plugin_dir_url(__FILE__) .'assets/js/eli-silva-donation.js', [], false, true);
 });
