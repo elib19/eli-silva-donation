@@ -1,9 +1,38 @@
-// Carregar os arquivos CSS e JS do plugin
-function eli_silva_donation_enqueue_assets() {
-    // Verificar se estamos na página de checkout ou na página do formulário
-    if (is_checkout() || is_page('cadastro-de-instituicoes')) {
-        wp_enqueue_style('eli-silva-donation-css', plugin_dir_url(__FILE__) . 'assets/css/eli-silva-donation.css', array(), '1.0.0');
-        wp_enqueue_script('eli-silva-donation-js', plugin_dir_url(__FILE__) . 'assets/js/eli-silva-donation.js', array('jquery'), '1.0.0', true);
-    }
+/* Estilos exclusivos para o plugin Eli Silva Donation */
+#donation_institution_field {
+    background-color: #f8f8f8;
+    padding: 15px;
+    border-radius: 5px;
+    margin-top: 20px;
 }
-add_action('wp_enqueue_scripts', 'eli_silva_donation_enqueue_assets');
+
+#donation_institution_field h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+#donation_institution_field select {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+#donation_institution_field .form-row-wide {
+    margin-bottom: 15px;
+}
+
+button[type="submit"] {
+    background-color: #0073e6; /* Cor de fundo do botão */
+    color: #fff; /* Cor do texto */
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button[type="submit"]:hover {
+    background-color: #005bb5;
+}
