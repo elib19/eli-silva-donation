@@ -57,22 +57,22 @@ add_action('woocommerce_order_status_completed', function($order_id) {
     // Envia e-mail para a instituição
     $to_institution = $institution['email'];
     $subject_institution = 'Nova Doação Recebida';
-    $message_institution = "Você recebeu uma doação através do site.\n\n" . 
-        "Cliente: " . $order->get_billing_first_name() . "\n" . 
-        "Produto: " . implode(', ', wp_list_pluck($order->get_items(), 'name')) . "\n" . 
-        "Valor da Doação: R$ " . number_format($donation_value, 2, ',', '.') . "\n" . 
-        "Data: " . wc_format_datetime($order->get_date_created()) . "\n" . 
+    $message_institution = "Você recebeu uma doação através do site.\n\n" .
+        "Cliente: " . $order->get_billing_first_name() . "\n" .
+        "Produto: " . implode(', ', wp_list_pluck($order->get_items(), 'name')) . "\n" .
+        "Valor da Doação: R$ " . number_format($donation_value, 2, ',', '.') . "\n" .
+        "Data: " . wc_format_datetime($order->get_date_created()) . "\n" .
         "Pagamento será efetuado em 15 dias.";
     wp_mail($to_institution, $subject_institution, $message_institution);
 
     // Envia e-mail para o administrador
     $admin_email = get_option('admin_email');
     $subject_admin = 'Nova Doação Realizada';
-    $message_admin = "Uma nova compra foi realizada com doação.\n\n" . 
-        "Cliente: " . $order->get_billing_first_name() . "\n" . 
-        "Instituição Beneficiada: " . $institution_name . "\n" . 
-        "Valor da Doação: R$ " . number_format($donation_value, 2, ',', '.') . "\n" . 
-        "Chave PIX da Instituição: " . $institution['pix_key'] . "\n" . 
+    $message_admin = "Uma nova compra foi realizada com doação.\n\n" .
+        "Cliente: " . $order->get_billing_first_name() . "\n" .
+        "Instituição Beneficiada: " . $institution_name . "\n" .
+        "Valor da Doação: R$ " . number_format($donation_value, 2, ',', '.') . "\n" .
+        "Chave PIX da Instituição: " . $institution['pix_key'] . "\n" .
         "Data: " . wc_format_datetime($order->get_date_created());
     wp_mail($admin_email, $subject_admin, $message_admin);
 });
@@ -141,48 +141,39 @@ add_shortcode('donation_form', function() {
 // Página no admin para gerenciar as doações
 add_action('admin_menu', function() {
     add_menu_page('Gerenciar Doações', 'Doações', 'manage_options', 'manage_donations', function() {
-        $institutions = get_option('donation_institutions', []);
-        
-        echo '<table class="wp-list-table widefat fixed striped">';
-        echo '<thead><tr><th>Instituição</th><th>CNPJ</th><th>Tipo</th><th>Estado</th><th>Chave PIX</th><th>Ações</th></tr></thead><tbody>';
-        
-        foreach ($institutions as $institution) {
-            echo '<tr>';
-            echo '<td><a href="' . admin_url('admin.php?page=manage_donations&view_institution=' . urlencode($institution['name'])) . '">' . esc_html($institution['name']) . '</a></td>';
-            echo '<td>' . esc_html($institution['cnpj']) . '</td>';
-            echo '<td>' . esc_html($institution['type']) . '</td>';
-            echo '<td>' . esc_html($institution['state']) . '</td>';
-            echo '<td>' . esc_html($institution['pix_key']) . '</td>';
-            echo '<td><a href="' . admin_url('admin.php?page=manage_donations&view_institution=' . urlencode($institution['name'])) . '">Ver</a></td>';
-            echo '</tr>';
-        }
+        $orders = wc_get_orders(['status' => 'completed', 'meta_key' => '_donation_institution']);
 
-        echo '</tbody></table>';
-        
-        // Ver informações da instituição ao clicar
-        if (isset($_GET['view_institution'])) {
-            $institution_name = sanitize_text_field($_GET['view_institution']);
+        echo '<table class="wp-list-table widefat fixed striped">';
+        echo '<thead><tr><th>Cliente</th><th>Instituição</th><th>Chave PIX</th><th>Valor</th><th>Data</th><th>Status</th></tr></thead><tbody>';
+
+        foreach ($orders as $order) {
+            $institution_name = get_post_meta($order->get_id(), '_donation_institution', true);
+            $institutions = get_option('donation_institutions', []);
+
             $institution = array_filter($institutions, function($inst) use ($institution_name) {
                 return $inst['name'] === $institution_name;
             });
             $institution = reset($institution);
-            
-            if ($institution) {
-                echo '<h3>Informações da Instituição</h3>';
-                echo '<p><strong>Nome:</strong> ' . esc_html($institution['name']) . '</p>';
-                echo '<p><strong>CNPJ:</strong> ' . esc_html($institution['cnpj']) . '</p>';
-                echo '<p><strong>Endereço:</strong> ' . esc_html($institution['address']) . '</p>';
-                echo '<p><strong>Estado:</strong> ' . esc_html($institution['state']) . '</p>';
-                echo '<p><strong>Tipo:</strong> ' . esc_html($institution['type']) . '</p>';
-                echo '<p><strong>Tipo de Chave PIX:</strong> ' . esc_html($institution['pix_type']) . '</p>';
-                echo '<p><strong>Chave PIX:</strong> ' . esc_html($institution['pix_key']) . '</p>';
-                echo '<p><strong>E-mail:</strong> ' . esc_html($institution['email']) . '</p>';
-            }
+
+            echo '<tr>';
+            echo '<td>' . esc_html($order->get_billing_first_name()) . '</td>';
+            echo '<td>' . esc_html($institution_name) . '</td>';
+            echo '<td>' . esc_html($institution['pix_key']) . '</td>';
+            echo '<td>R$ ' . number_format($order->get_total() * 0.3, 2, ',', '.') . '</td>';
+            echo '<td>' . wc_format_datetime($order->get_date_created()) . '</td>';
+            echo '<td>Pendente</td>';
+            echo '</tr>';
         }
+
+        echo '</tbody></table>';
     });
+});
+
 // Garantir que o CSS e JS já criados estejam funcionando
 add_action('wp_enqueue_scripts', function() {
+    // Enqueue seu CSS
     wp_enqueue_style('meu-estilo', plugin_dir_url(__FILE__) .'assets/css/eli-silva-donation.css');
+    
+    // Enqueue seu JS
     wp_enqueue_script('meu-script', plugin_dir_url(__FILE__) .'assets/js/eli-silva-donation.js', [], false, true);
 });
-?>
