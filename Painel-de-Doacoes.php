@@ -55,16 +55,16 @@ function donation_plugin_activate() {
 }
 register_activation_hook(__FILE__, 'donation_plugin_activate');
 
-// Registrar o menu no painel administrativo
+// Função para registrar o menu no painel de administração
 function donation_register_menu() {
     add_menu_page(
-        'Painel de Doações',          // Título da página
-        'Doações',                    // Nome do menu
-        'manage_options',             // Permissão necessária
-        'donation_panel',             // Slug do menu
-        'donation_admin_page',        // Função a ser chamada
-        'dashicons-heart',            // Ícone do menu
-        6                             // Posição do menu
+        'Painel de Doações',
+        'Doações',
+        'manage_options',
+        'painel-doacoes',
+        'donation_admin_page',
+        'dashicons-heart',
+        26
     );
 }
 add_action('admin_menu', 'donation_register_menu');
@@ -89,20 +89,19 @@ function donation_admin_page() {
         echo '<p>Nenhuma doação registrada ainda.</p>';
     }
 }
-
-// Adicionar campo de configuração de porcentagem no painel do admin
-function donation_percentage_setting() {
-    add_option('donation_percentage', 10);  // Valor inicial da porcentagem
-    register_setting('general', 'donation_percentage', 'intval');
-    add_settings_section('donation_section', 'Configurações de Doação', null, 'general');
-    add_settings_field('donation_percentage_field', 'Porcentagem de Doação (%)', 'donation_percentage_field', 'general', 'donation_section');
+// Adiciona a opção de configuração na página de configurações do WordPress
+function esd_donation_settings() {
+    add_option('esd_donation_percentage', 10);  // Valor padrão é 10%
+    register_setting('general', 'esd_donation_percentage', 'intval');
+    add_settings_section('esd_donation_section', 'Configurações de Doação', null, 'general');
+    add_settings_field('esd_donation_percentage', 'Porcentagem de Doação', 'esd_donation_percentage_callback', 'general', 'esd_donation_section');
 }
-add_action('admin_init', 'donation_percentage_setting');
+add_action('admin_init', 'esd_donation_settings');
 
-// Função para exibir o campo de porcentagem
-function donation_percentage_field() {
-    $percentage = get_option('donation_percentage', 10);
-    echo '<input type="number" name="donation_percentage" value="' . esc_attr($percentage) . '" min="0" max="100" step="1" />%';
+// Função que cria o campo de input para a porcentagem de doação
+function esd_donation_percentage_callback() {
+    $value = get_option('esd_donation_percentage', 10);
+    echo "<input type='number' name='esd_donation_percentage' value='" . esc_attr($value) . "' min='0' max='100' step='1' /> %";
 }
 
 // Shortcode para cadastro de instituições
@@ -240,15 +239,6 @@ function donation_form_process() {
 }
 add_action('init', 'donation_form_process');
 
-// Aplicar a doação no checkout com base na porcentagem configurada
-function apply_donation_percentage_to_order_total($cart_total) {
-    $donation_percentage = get_option('donation_percentage', 10); // Pega a porcentagem configurada
-    $donation_amount = ($cart_total * $donation_percentage) / 100; // Calcula o valor da doação
-    $cart_total += $donation_amount; // Adiciona o valor da doação ao total do pedido
-    return $cart_total;
-}
-add_filter('woocommerce_calculated_total', 'apply_donation_percentage_to_order_total');
-
 // Adicionar o seletor de instituição no checkout
 function add_donation_selector_to_checkout($checkout) {
     global $wpdb;
@@ -312,66 +302,11 @@ function donation_order_completed($order_id) {
 }
 add_action('woocommerce_order_status_completed', 'donation_order_completed');
 
-// Salvar a instituição selecionada no pedido
-function save_donation_institution_to_order($order_id) {
-    if (!empty($_POST['donation_institution'])) {
-        $donation_institution = sanitize_text_field($_POST['donation_institution']);
-        update_post_meta($order_id, '_donation_institution', $donation_institution);
-    }
-}
-add_action('woocommerce_checkout_update_order_meta', 'save_donation_institution_to_order');
-
-// Exibir a instituição selecionada no painel do pedido
-function display_donation_institution_in_order($order) {
-    $donation_institution = get_post_meta($order->get_id(), '_donation_institution', true);
-    if ($donation_institution) {
-        echo '<p><strong>Instituição de Doação:</strong> ' . esc_html($donation_institution) . '</p>';
-    }
-}
-add_action('woocommerce_admin_order_data_after_billing_address', 'display_donation_institution_in_order');
-
-// Adicionar campo no checkout
-function add_donation_institution_field($fields) {
-    $fields['billing']['donation_institution'] = array(
-        'type'        => 'select',
-        'label'       => __('Instituição de Doação', 'text-domain'),
-        'required'    => true,
-        'options'     => array(
-            '' => __('Selecione uma instituição', 'text-domain'),
-            'instituicao_1' => __('Instituição 1', 'text-domain'),
-            'instituicao_2' => __('Instituição 2', 'text-domain'),
-        ),
-    );
-    return $fields;
-}
-add_filter('woocommerce_checkout_fields', 'add_donation_institution_field');
-
-
 // Função auxiliar para buscar uma instituição pelo ID
 function get_instituicao_by_id($id) {
     global $wpdb;
     return $wpdb->get_row("SELECT * FROM {$wpdb->prefix}instituicoes WHERE id = $id");
 }
-
-// Adicionar o seletor de instituição no checkout
-function add_donation_selector_to_checkout($checkout) {
-    global $wpdb;
-    // Certifique-se de que a tabela existe e que há dados na tabela 'instituicoes'
-    $instituicoes = $wpdb->get_results("SELECT id, nome FROM {$wpdb->prefix}instituicoes", ARRAY_A);
-    
-    if (!empty($instituicoes)) {
-        echo '<div class="donation-selector"><label>Você deseja doar para qual instituição?</label><br><select name="donation_institution">';
-        echo '<option value="">Nenhuma</option>';
-        foreach ($instituicoes as $instituicao) {
-            echo '<option value="' . esc_attr($instituicao['id']) . '">' . esc_html($instituicao['nome']) . '</option>';
-        }
-        echo '</select></div>';
-    } else {
-        echo '<p>Não há instituições cadastradas para doação.</p>';
-    }
-}
-add_action('woocommerce_after_order_notes', 'add_donation_selector_to_checkout');
-
 // Garantir que o CSS e JS já criados estejam funcionando
 add_action('wp_enqueue_scripts', function() {
     // Enqueue seu CSS
