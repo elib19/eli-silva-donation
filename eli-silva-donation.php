@@ -1,173 +1,208 @@
 <?php
 /**
- * Plugin Name: Eli Silva Donation
+ * Plugin Name: Painel de Doações
  * Plugin URI: https://juntoaqui.com.br
  * Description: Plugin para adicionar funcionalidades de doação ao WooCommerce, com seleção de instituição no checkout e envio de e-mail para o administrador.
  * Version: 1.0.0
  * Author: Eli Silva
  * Author URI: https://juntoaqui.com.br
- * Text Domain: eli-silva-donation
+ * Text Domain: Painel de Doações
  * Domain Path: /languages
  */
 
-// Evita acesso direto ao arquivo
+// Impedir acesso direto ao arquivo
 if (!defined('ABSPATH')) {
     exit;
 }
 
-// Adiciona o campo de seleção no carrinho
-add_action('woocommerce_before_cart', function() {
-    $institutions = get_option('donation_institutions', []);
-    echo '<div><label for="donation_institution">Escolha a Instituição:</label><select id="donation_institution" name="donation_institution">';
-    echo '<option value="">Selecione uma instituição</option>';
-    foreach ($institutions as $institution) {
-        echo '<option value="' . esc_attr($institution['name']) . '">' . esc_html($institution['name']) . '</option>';
+// Ativação do plugin: Criação de tabelas no banco de dados
+function donation_plugin_activate() {
+    global $wpdb;
+
+    $table_name = $wpdb->prefix . 'instituicoes';
+    $charset_collate = $wpdb->get_charset_collate();
+
+    $sql = "CREATE TABLE $table_name (
+        id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+        nome VARCHAR(255) NOT NULL,
+        cnpj VARCHAR(18) NOT NULL,
+        telefone VARCHAR(15) NOT NULL,
+        whatsapp VARCHAR(15) NOT NULL,
+        tipo VARCHAR(50) NOT NULL,
+        endereco TEXT NOT NULL,
+        cidade VARCHAR(100) NOT NULL,
+        estado VARCHAR(2) NOT NULL,
+        cep VARCHAR(9) NOT NULL,
+        chave_pix VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        PRIMARY KEY (id)
+    ) $charset_collate;";
+
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($sql);
+}
+register_activation_hook(__FILE__, 'donation_plugin_activate');
+
+// Função para registrar o menu no painel de administração
+function donation_register_menu() {
+    add_menu_page(
+        'Painel de Doações',
+        'Doações',
+        'manage_options',
+        'painel-doacoes',
+        'donation_admin_page',
+        'dashicons-heart',
+        26
+    );
+}
+add_action('admin_menu', 'donation_register_menu');
+
+// Página administrativa para gerenciar doações
+function donation_admin_page() {
+    global $wpdb;
+
+    $instituicoes_table = $wpdb->prefix . 'instituicoes';
+    $doacoes_table = $wpdb->prefix . 'woocommerce_order_items'; // Simplificação
+
+    echo '<h1>Painel de Doações</h1>';
+
+    // Exibir as doações
+    echo '<h2>Doações Recentes</h2>';
+    $results = $wpdb->get_results("SELECT * FROM $instituicoes_table");
+    if ($results) {
+        echo '<table><tr><th>Nome</th><th>Tipo</th><th>Chave Pix</th><th>Status</th></tr>';
+        foreach ($results as $row) {
+            echo "<tr><td>{$row->nome}</td><td>{$row->tipo}</td><td>{$row->chave_pix}</td><td>Pendente</td></tr>";
+        }
+        echo '</table>';
+    } else {
+        echo '<p>Nenhuma doação registrada ainda.</p>';
     }
-    echo '</select></div>';
-});
+}
 
-// Salva a instituição escolhida no meta do pedido
-add_action('woocommerce_checkout_update_order_meta', function($order_id) {
-    if (!empty($_POST['donation_institution'])) {
-        update_post_meta($order_id, '_donation_institution', sanitize_text_field($_POST['donation_institution']));
-    }
-});
-
-// Envia e-mails e registra o pedido no painel somente após o pagamento
-add_action('woocommerce_order_status_completed', function($order_id) {
-    $order = wc_get_order($order_id);
-    $institution_name = get_post_meta($order_id, '_donation_institution', true);
-    $institutions = get_option('donation_institutions', []);
-
-    $institution = array_filter($institutions, function($inst) use ($institution_name) {
-        return $inst['name'] === $institution_name;
-    });
-    $institution = reset($institution);
-
-    if (!$institution) return;
-
-    $donation_value = $order->get_total() * 0.3;
-
-    // Envia e-mail para o cliente
-    $to_customer = $order->get_billing_email();
-    $subject_customer = 'Confirmação de Doação';
-    $message_customer = "Obrigado pela sua compra! Sua doação foi destinada a {$institution_name}.";
-    wp_mail($to_customer, $subject_customer, $message_customer);
-
-    // Envia e-mail para a instituição
-    $to_institution = $institution['email'];
-    $subject_institution = 'Nova Doação Recebida';
-    $message_institution = "Você recebeu uma doação através do site.\n\n" .
-        "Cliente: " . $order->get_billing_first_name() . "\n" .
-        "Produto: " . implode(', ', wp_list_pluck($order->get_items(), 'name')) . "\n" .
-        "Valor da Doação: R$ " . number_format($donation_value, 2, ',', '.') . "\n" .
-        "Data: " . wc_format_datetime($order->get_date_created()) . "\n" .
-        "Pagamento será efetuado em 15 dias.";
-    wp_mail($to_institution, $subject_institution, $message_institution);
-
-    // Envia e-mail para o administrador
-    $admin_email = get_option('admin_email');
-    $subject_admin = 'Nova Doação Realizada';
-    $message_admin = "Uma nova compra foi realizada com doação.\n\n" .
-        "Cliente: " . $order->get_billing_first_name() . "\n" .
-        "Instituição Beneficiada: " . $institution_name . "\n" .
-        "Valor da Doação: R$ " . number_format($donation_value, 2, ',', '.') . "\n" .
-        "Chave PIX da Instituição: " . $institution['pix_key'] . "\n" .
-        "Data: " . wc_format_datetime($order->get_date_created());
-    wp_mail($admin_email, $subject_admin, $message_admin);
-});
-
-// Shortcode para o formulário de cadastro de instituições
-add_shortcode('donation_form', function() {
-    if ($_POST['donation_form_submitted']) {
-        $new_institution = [
-            'name' => sanitize_text_field($_POST['name']),
-            'cnpj' => sanitize_text_field($_POST['cnpj']),
-            'address' => sanitize_text_field($_POST['address']),
-            'state' => sanitize_text_field($_POST['state']),
-            'pix_type' => sanitize_text_field($_POST['pix_type']),
-            'pix_key' => sanitize_text_field($_POST['pix_key']),
-            'email' => sanitize_email($_POST['email']),
-            'type' => sanitize_text_field($_POST['type'])
-        ];
-        $institutions = get_option('donation_institutions', []);
-        $institutions[] = $new_institution;
-        update_option('donation_institutions', $institutions);
-        echo '<div class="success">Instituição cadastrada com sucesso!</div>';
-    }
-
+// Shortcode para cadastro de instituições
+function donation_form_shortcode() {
     ob_start();
     ?>
-    <form method="POST">
-        <input type="hidden" name="donation_form_submitted" value="1">
-        <label for="name">Nome da Instituição:</label><br>
-        <input type="text" name="name" required><br>
-        <label for="cnpj">CNPJ:</label><br>
+    <form method="post" action="">
+        <label>Nome da Instituição:</label><br>
+        <input type="text" name="nome" required><br>
+
+        <label>CNPJ:</label><br>
         <input type="text" name="cnpj" required><br>
-        <label for="address">Endereço:</label><br>
-        <input type="text" name="address" required><br>
-        <label for="state">Estado:</label><br>
-        <select name="state" required><br>
-            <option value="">Selecione um estado</option>
-            <?php foreach (["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"] as $state): ?>
-                <option value="<?= $state ?>"><?= $state ?></option>
-            <?php endforeach; ?>
-        </select><br>
-        <label for="type">Tipo de Instituição:</label><br>
-        <select name="type" required><br>
-            <option value="">Selecione o tipo</option>
-            <option value="hospital_de_cancer">Hospital de Câncer</option>
+
+        <label>Telefone:</label><br>
+        <input type="text" name="telefone" required><br>
+
+        <label>WhatsApp:</label><br>
+        <input type="text" name="whatsapp" required><br>
+
+        <label>Tipo da Instituição:</label><br>
+        <select name="tipo" required>
+            <option value="hospital">Hospital de Câncer</option>
             <option value="igreja">Igreja</option>
-            <option value="instituicao_caridade">Instituição de Caridade</option>
-            <option value="outro">Outro</option>
+            <option value="beneficente">Entidade Beneficente</option>
+            <option value="apoio">Casa de Apoio</option>
+            <option value="recuperacao">Casa de Recuperação</option>
         </select><br>
-        <label for="pix_type">Tipo de Chave PIX:</label><br>
-        <select name="pix_type" required><br>
-            <option value="">Selecione o tipo</option>
-            <option value="cnpj">CNPJ</option>
-            <option value="phone">Número de Celular</option>
-            <option value="random">Chave Aleatória</option>
+
+        <label>Endereço:</label><br>
+        <textarea name="endereco" required></textarea><br>
+
+        <label>Cidade:</label><br>
+        <input type="text" name="cidade" required><br>
+
+        <label>Estado:</label><br>
+        <select name="estado" required>
+            <option value="AC">Acre</option>
+            <option value="AL">Alagoas</option>
+            <option value="AP">Amapá</option>
+            <option value="AM">Amazonas</option>
+            <option value="BA">Bahia</option>
+            <option value="CE">Ceará</option>
+            <option value="DF">Distrito Federal</option>
+            <option value="ES">Espírito Santo</option>
+            <option value="GO">Goiás</option>
+            <option value="MA">Maranhão</option>
+            <option value="MT">Mato Grosso</option>
+            <option value="MS">Mato Grosso do Sul</option>
+            <option value="MG">Minas Gerais</option>
+            <option value="PA">Pará</option>
+            <option value="PB">Paraíba</option>
+            <option value="PR">Paraná</option>
+            <option value="PE">Pernambuco</option>
+            <option value="PI">Piauí</option>
+            <option value="RJ">Rio de Janeiro</option>
+            <option value="RN">Rio Grande do Norte</option>
+            <option value="RS">Rio Grande do Sul</option>
+            <option value="RO">Rondônia</option>
+            <option value="RR">Roraima</option>
+            <option value="SC">Santa Catarina</option>
+            <option value="SP">São Paulo</option>
+            <option value="SE">Sergipe</option>
+            <option value="TO">Tocantins</option>
         </select><br>
-        <label for="pix_key">Chave PIX:</label><br>
-        <input type="text" name="pix_key" required><br>
-        <label for="email">E-mail:</label><br>
+
+        <label>CEP:</label><br>
+        <input type="text" name="cep" required><br>
+
+        <label>E-mail:</label><br>
         <input type="email" name="email" required><br>
-        <button type="submit">Cadastrar</button>
+
+        <label>Chave Pix:</label><br>
+        <input type="text" name="chave_pix" required><br>
+
+        <button type="submit">Cadastrar Instituição</button>
     </form>
     <?php
     return ob_get_clean();
-});
+}
+add_shortcode('donation_form', 'donation_form_shortcode');
 
-// Página no admin para gerenciar as doações
-add_action('admin_menu', function() {
-    add_menu_page('Gerenciar Doações', 'Doações', 'manage_options', 'manage_donations', function() {
-        $orders = wc_get_orders(['status' => 'completed', 'meta_key' => '_donation_institution']);
+// Lógica para processar o formulário
+function donation_form_process() {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nome'])) {
+        global $wpdb;
 
-        echo '<table class="wp-list-table widefat fixed striped">';
-        echo '<thead><tr><th>Cliente</th><th>Instituição</th><th>Chave PIX</th><th>Valor</th><th>Data</th><th>Status</th></tr></thead><tbody>';
+        $table_name = $wpdb->prefix . 'instituicoes';
+        $data = [
+            'nome' => sanitize_text_field($_POST['nome']),
+            'cnpj' => sanitize_text_field($_POST['cnpj']),
+            'telefone' => sanitize_text_field($_POST['telefone']),
+            'whatsapp' => sanitize_text_field($_POST['whatsapp']),
+            'tipo' => sanitize_text_field($_POST['tipo']),
+            'endereco' => sanitize_textarea_field($_POST['endereco']),
+            'cidade' => sanitize_text_field($_POST['cidade']),
+            'estado' => sanitize_text_field($_POST['estado']),
+            'cep' => sanitize_text_field($_POST['cep']),
+            'email' => sanitize_email($_POST['email']),
+            'chave_pix' => sanitize_text_field($_POST['chave_pix']),
+        ];
 
-        foreach ($orders as $order) {
-            $institution_name = get_post_meta($order->get_id(), '_donation_institution', true);
-            $institutions = get_option('donation_institutions', []);
+        $wpdb->insert($table_name, $data);
 
-            $institution = array_filter($institutions, function($inst) use ($institution_name) {
-                return $inst['name'] === $institution_name;
-            });
-            $institution = reset($institution);
+        wp_redirect(add_query_arg('success', '1', wp_get_referer()));
+        exit;
+    }
+}
+add_action('init', 'donation_form_process');
 
-            echo '<tr>';
-            echo '<td>' . esc_html($order->get_billing_first_name()) . '</td>';
-            echo '<td>' . esc_html($institution_name) . '</td>';
-            echo '<td>' . esc_html($institution['pix_key']) . '</td>';
-            echo '<td>R$ ' . number_format($order->get_total() * 0.3, 2, ',', '.') . '</td>';
-            echo '<td>' . wc_format_datetime($order->get_date_created()) . '</td>';
-            echo '<td>Pendente</td>';
-            echo '</tr>';
+// Integração com WooCommerce para adicionar o seletor no carrinho
+function add_donation_selector_to_cart() {
+    global $wpdb;
+    $instituicoes = $wpdb->get_results("SELECT id, nome FROM {$wpdb->prefix}instituicoes", ARRAY_A);
+
+    if (!empty($instituicoes)) {
+        echo '<div class="donation-selector"><label>Selecione a instituição que vai receber a doação:</label><br><select name="donation_institution">';
+        echo '<option value="">Nenhuma</option>';
+        foreach ($instituicoes as $instituicao) {
+            echo '<option value="' . esc_attr($instituicao['id']) . '">' . esc_html($instituicao['nome']) . '</option>';
         }
+        echo '</select></div>';
+    }
+}
+add_action('woocommerce_after_cart_totals', 'add_donation_selector_to_cart');
 
-        echo '</tbody></table>';
-    });
-});
 
 // Garantir que o CSS e JS já criados estejam funcionando
 add_action('wp_enqueue_scripts', function() {
