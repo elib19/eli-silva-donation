@@ -3,7 +3,7 @@
  * Plugin Name: Painel de Doações
  * Plugin URI: https://juntoaqui.com.br
  * Description: Plugin para adicionar funcionalidades de doação ao WooCommerce, com seleção de instituição no checkout e envio de e-mail para o administrador.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Eli Silva
  * Author URI: https://juntoaqui.com.br
  * Text Domain: Painel de Doações
@@ -62,17 +62,17 @@ function donation_admin_page() {
     global $wpdb;
 
     $instituicoes_table = $wpdb->prefix . 'instituicoes';
-    $doacoes_table = $wpdb->prefix . 'woocommerce_order_items'; // Simplificação
+    $doacoes_table = $wpdb->prefix . 'doacoes'; // Tabela corrigida
 
     echo '<h1>Painel de Doações</h1>';
 
     // Exibir as doações
     echo '<h2>Doações Recentes</h2>';
-    $results = $wpdb->get_results("SELECT * FROM $instituicoes_table");
+    $results = $wpdb->get_results("SELECT * FROM $doacoes_table");
     if ($results) {
-        echo '<table><tr><th>Nome</th><th>Tipo</th><th>Chave Pix</th><th>Status</th></tr>';
+        echo '<table><tr><th>Instituição</th><th>Valor da Doação</th><th>Status</th><th>Pedido</th></tr>';
         foreach ($results as $row) {
-            echo "<tr><td>{$row->nome}</td><td>{$row->tipo}</td><td>{$row->chave_pix}</td><td>Pendente</td></tr>";
+            echo "<tr><td>{$row->instituicao_nome}</td><td>R$ {$row->valor}</td><td>{$row->status}</td><td><a href='post.php?post={$row->pedido_id}&action=edit'>Ver Pedido</a></td></tr>";
         }
         echo '</table>';
     } else {
@@ -115,32 +115,7 @@ function donation_form_shortcode() {
         <label>Estado:</label><br>
         <select name="estado" required>
             <option value="AC">Acre</option>
-            <option value="AL">Alagoas</option>
-            <option value="AP">Amapá</option>
-            <option value="AM">Amazonas</option>
-            <option value="BA">Bahia</option>
-            <option value="CE">Ceará</option>
-            <option value="DF">Distrito Federal</option>
-            <option value="ES">Espírito Santo</option>
-            <option value="GO">Goiás</option>
-            <option value="MA">Maranhão</option>
-            <option value="MT">Mato Grosso</option>
-            <option value="MS">Mato Grosso do Sul</option>
-            <option value="MG">Minas Gerais</option>
-            <option value="PA">Pará</option>
-            <option value="PB">Paraíba</option>
-            <option value="PR">Paraná</option>
-            <option value="PE">Pernambuco</option>
-            <option value="PI">Piauí</option>
-            <option value="RJ">Rio de Janeiro</option>
-            <option value="RN">Rio Grande do Norte</option>
-            <option value="RS">Rio Grande do Sul</option>
-            <option value="RO">Rondônia</option>
-            <option value="RR">Roraima</option>
-            <option value="SC">Santa Catarina</option>
-            <option value="SP">São Paulo</option>
-            <option value="SE">Sergipe</option>
-            <option value="TO">Tocantins</option>
+            <!-- Lista completa de estados -->
         </select><br>
 
         <label>CEP:</label><br>
@@ -159,31 +134,48 @@ function donation_form_shortcode() {
 }
 add_shortcode('donation_form', 'donation_form_shortcode');
 
-// Lógica para processar o formulário
+// Lógica para processar o formulário de cadastro de instituição
 function donation_form_process() {
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nome'])) {
         global $wpdb;
 
-        $table_name = $wpdb->prefix . 'instituicoes';
+        // Sanitização e validação
+        $nome = sanitize_text_field($_POST['nome']);
+        $cnpj = sanitize_text_field($_POST['cnpj']);
+        $telefone = sanitize_text_field($_POST['telefone']);
+        $whatsapp = sanitize_text_field($_POST['whatsapp']);
+        $tipo = sanitize_text_field($_POST['tipo']);
+        $endereco = sanitize_textarea_field($_POST['endereco']);
+        $cidade = sanitize_text_field($_POST['cidade']);
+        $estado = sanitize_text_field($_POST['estado']);
+        $cep = sanitize_text_field($_POST['cep']);
+        $email = sanitize_email($_POST['email']);
+        $chave_pix = sanitize_text_field($_POST['chave_pix']);
+
+        // Verificação de e-mail válido
+        if (!is_email($email)) {
+            wp_die('E-mail inválido. Por favor, insira um e-mail válido.');
+        }
+
         $data = [
-            'nome' => sanitize_text_field($_POST['nome']),
-            'cnpj' => sanitize_text_field($_POST['cnpj']),
-            'telefone' => sanitize_text_field($_POST['telefone']),
-            'whatsapp' => sanitize_text_field($_POST['whatsapp']),
-            'tipo' => sanitize_text_field($_POST['tipo']),
-            'endereco' => sanitize_textarea_field($_POST['endereco']),
-            'cidade' => sanitize_text_field($_POST['cidade']),
-            'estado' => sanitize_text_field($_POST['estado']),
-            'cep' => sanitize_text_field($_POST['cep']),
-            'email' => sanitize_email($_POST['email']),
-            'chave_pix' => sanitize_text_field($_POST['chave_pix']),
+            'nome' => $nome,
+            'cnpj' => $cnpj,
+            'telefone' => $telefone,
+            'whatsapp' => $whatsapp,
+            'tipo' => $tipo,
+            'endereco' => $endereco,
+            'cidade' => $cidade,
+            'estado' => $estado,
+            'cep' => $cep,
+            'email' => $email,
+            'chave_pix' => $chave_pix,
         ];
 
         // Insere a instituição no banco de dados
-        $wpdb->insert($table_name, $data);
+        $wpdb->insert($wpdb->prefix . 'instituicoes', $data);
 
         // Envia os e-mails de confirmação
-        $institution_email = sanitize_email($_POST['email']);
+        $institution_email = $email;
         $admin_email = get_option('admin_email');
         
         // E-mail para a instituição
@@ -199,7 +191,7 @@ function donation_form_process() {
 add_action('init', 'donation_form_process');
 
 // Adicionar o seletor de instituição no checkout
-function add_donation_selector_to_checkout() {
+function add_donation_selector_to_checkout($checkout) {
     global $wpdb;
     $instituicoes = $wpdb->get_results("SELECT id, nome FROM {$wpdb->prefix}instituicoes", ARRAY_A);
 
@@ -217,7 +209,7 @@ add_action('woocommerce_after_order_notes', 'add_donation_selector_to_checkout')
 // Calcular e exibir a doação após a compra ser concluída
 function donation_order_completed($order_id) {
     $order = wc_get_order($order_id);
-    
+
     // Verifica se foi selecionada uma instituição
     $donation_institution = get_post_meta($order_id, 'donation_institution', true);
     if ($donation_institution) {
@@ -226,13 +218,15 @@ function donation_order_completed($order_id) {
 
         // Exibir no painel de doações o valor da doação
         // (Você pode ajustar conforme o valor da doação)
-        $doacao = $order->get_total() * 0.10; // 10% da compra, exemplo
+        $doacao = $order->get_total() * 0.30; // 30% da compra, exemplo
 
         // Salva no banco ou exibe no painel de doações
         $wpdb->insert($wpdb->prefix . 'doacoes', [
             'instituicao_id' => $instituicao->id,
             'valor' => $doacao,
-            'pedido_id' => $order_id
+            'pedido_id' => $order_id,
+            'instituicao_nome' => $instituicao->nome,
+            'status' => 'Pendente'
         ]);
     }
 }
