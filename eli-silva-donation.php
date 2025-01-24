@@ -89,6 +89,20 @@ function donation_admin_page() {
         echo '<p>Nenhuma doação registrada ainda.</p>';
     }
 }
+// Adiciona a opção de configuração na página de configurações do WordPress
+function esd_donation_settings() {
+    add_option('esd_donation_percentage', 10);  // Valor padrão é 10%
+    register_setting('general', 'esd_donation_percentage', 'intval');
+    add_settings_section('esd_donation_section', 'Configurações de Doação', null, 'general');
+    add_settings_field('esd_donation_percentage', 'Porcentagem de Doação', 'esd_donation_percentage_callback', 'general', 'esd_donation_section');
+}
+add_action('admin_init', 'esd_donation_settings');
+
+// Função que cria o campo de input para a porcentagem de doação
+function esd_donation_percentage_callback() {
+    $value = get_option('esd_donation_percentage', 10);
+    echo "<input type='number' name='esd_donation_percentage' value='" . esc_attr($value) . "' min='0' max='100' step='1' /> %";
+}
 
 // Shortcode para cadastro de instituições
 function donation_form_shortcode() {
@@ -229,7 +243,12 @@ function donation_order_completed($order_id) {
     $donation_institution = get_post_meta($order_id, 'donation_institution', true);
     if ($donation_institution) {
         $instituicao = get_instituicao_by_id($donation_institution); // Função que retorna a instituição
-        $valor = $order->get_total() * 0.1; // Exemplo: Doar 10% do valor do pedido
+        // Obtém a porcentagem configurada no painel de administração
+        $percentagem = get_option('esd_donation_percentage', 10);  // Valor padrão é 10%
+
+        // Calcula o valor da doação com a porcentagem configurada
+        $valor = $order->get_total() * ($percentagem / 100);
+
         $email_admin = get_option('admin_email');
         $email_instituicao = $instituicao->email;
 
