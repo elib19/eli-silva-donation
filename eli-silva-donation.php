@@ -179,7 +179,18 @@ function donation_form_process() {
             'chave_pix' => sanitize_text_field($_POST['chave_pix']),
         ];
 
+        // Insere a instituição no banco de dados
         $wpdb->insert($table_name, $data);
+
+        // Envia os e-mails de confirmação
+        $institution_email = sanitize_email($_POST['email']);
+        $admin_email = get_option('admin_email');
+        
+        // E-mail para a instituição
+        wp_mail($institution_email, 'Cadastro Concluído', 'Parabéns, sua instituição foi cadastrada com sucesso!');
+        
+        // E-mail para o administrador
+        wp_mail($admin_email, 'Novo Cadastro de Instituição', 'Uma nova instituição foi cadastrada no site.');
 
         wp_redirect(add_query_arg('success', '1', wp_get_referer()));
         exit;
@@ -187,8 +198,8 @@ function donation_form_process() {
 }
 add_action('init', 'donation_form_process');
 
-// Integração com WooCommerce para adicionar o seletor no carrinho
-function add_donation_selector_to_cart() {
+// Adicionar o seletor de instituição no checkout
+function add_donation_selector_to_checkout() {
     global $wpdb;
     $instituicoes = $wpdb->get_results("SELECT id, nome FROM {$wpdb->prefix}instituicoes", ARRAY_A);
 
@@ -201,8 +212,31 @@ function add_donation_selector_to_cart() {
         echo '</select></div>';
     }
 }
-add_action('woocommerce_after_cart_totals', 'add_donation_selector_to_cart');
+add_action('woocommerce_after_order_notes', 'add_donation_selector_to_checkout');
 
+// Calcular e exibir a doação após a compra ser concluída
+function donation_order_completed($order_id) {
+    $order = wc_get_order($order_id);
+    
+    // Verifica se foi selecionada uma instituição
+    $donation_institution = get_post_meta($order_id, 'donation_institution', true);
+    if ($donation_institution) {
+        global $wpdb;
+        $instituicao = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}instituicoes WHERE id = $donation_institution");
+
+        // Exibir no painel de doações o valor da doação
+        // (Você pode ajustar conforme o valor da doação)
+        $doacao = $order->get_total() * 0.10; // 10% da compra, exemplo
+
+        // Salva no banco ou exibe no painel de doações
+        $wpdb->insert($wpdb->prefix . 'doacoes', [
+            'instituicao_id' => $instituicao->id,
+            'valor' => $doacao,
+            'pedido_id' => $order_id
+        ]);
+    }
+}
+add_action('woocommerce_order_status_completed', 'donation_order_completed');
 
 // Garantir que o CSS e JS já criados estejam funcionando
 add_action('wp_enqueue_scripts', function() {
