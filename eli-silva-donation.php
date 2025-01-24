@@ -242,7 +242,9 @@ add_action('init', 'donation_form_process');
 // Adicionar o seletor de instituição no checkout
 function add_donation_selector_to_checkout($checkout) {
     global $wpdb;
+    // Certifique-se de que a tabela existe e que há dados na tabela 'instituicoes'
     $instituicoes = $wpdb->get_results("SELECT id, nome FROM {$wpdb->prefix}instituicoes", ARRAY_A);
+    
     if (!empty($instituicoes)) {
         echo '<div class="donation-selector"><label>Você deseja doar para qual instituição?</label><br><select name="donation_institution">';
         echo '<option value="">Nenhuma</option>';
@@ -250,6 +252,8 @@ function add_donation_selector_to_checkout($checkout) {
             echo '<option value="' . esc_attr($instituicao['id']) . '">' . esc_html($instituicao['nome']) . '</option>';
         }
         echo '</select></div>';
+    } else {
+        echo '<p>Não há instituições cadastradas para doação.</p>';
     }
 }
 add_action('woocommerce_after_order_notes', 'add_donation_selector_to_checkout');
