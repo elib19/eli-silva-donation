@@ -218,7 +218,7 @@ function donation_order_completed($order_id) {
 
         // Exibir no painel de doações o valor da doação
         // (Você pode ajustar conforme o valor da doação)
-        $doacao = $order->get_total() * 0.30; // 30% da compra, exemplo
+        $doacao = $order->get_total() * 0.10; // 10% da compra, exemplo
 
         // Salva no banco ou exibe no painel de doações
         $wpdb->insert($wpdb->prefix . 'doacoes', [
