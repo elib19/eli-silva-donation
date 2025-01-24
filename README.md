@@ -1,73 +1,84 @@
+### README - Sistema de Gerenciamento de Doações no WordPress com Integração ao WooCommerce
 
-Plugin de Doações para WooCommerce
-Este plugin permite que você adicione uma funcionalidade de doações para WooCommerce, permitindo que os clientes escolham uma instituição para doar 30% do valor da compra. Ele também inclui um formulário para cadastro de novas instituições e um painel administrativo para gerenciar as doações realizadas.
+---
 
-Funcionalidades
-Formulário de Cadastro de Instituições: Permite que novas instituições sejam cadastradas através de um formulário simples. As informações incluem nome, CNPJ, endereço, estado, chave PIX e e-mail.
-Seleção de Instituições no Carrinho: Permite que os clientes escolham uma instituição para a qual serão doadas 30% do valor de sua compra.
-Envio de E-mails: Ao completar uma compra, o cliente, a instituição e o administrador recebem e-mails com as informações da doação.
-Painel Administrativo: Adiciona uma página no painel administrativo do WordPress, onde você pode visualizar e gerenciar todas as doações feitas.
-Requisitos
-WordPress 5.0 ou superior
-WooCommerce 3.0 ou superior
-PHP 7.2 ou superior
-Como Instalar
-Instalação Manual:
+#### **Descrição do Projeto**  
+Este sistema foi desenvolvido para gerenciar doações no WordPress, integrado ao WooCommerce. Ele permite cadastrar instituições, atribuir doações realizadas por clientes e gerenciar status de pagamentos de forma eficiente. O sistema é ideal para marketplaces ou sites que desejam implementar funcionalidades de doação com controle detalhado.
 
-Faça o download do arquivo ZIP do plugin.
-No painel do WordPress, vá para Plugins > Adicionar Novo.
-Clique em Enviar Plugin e selecione o arquivo ZIP.
-Clique em Instalar Agora e, em seguida, ative o plugin.
-Instalação via FTP:
+---
 
-Faça o upload do plugin para a pasta wp-content/plugins/.
-No painel do WordPress, ative o plugin na seção Plugins.
-Como Usar
-Cadastro de Instituições
-Criar uma Página para o Formulário de Cadastro
+#### **Funcionalidades Principais**
 
-Crie uma nova página no WordPress onde você deseja que o formulário de cadastro de instituições apareça.
-No editor de página, insira o seguinte shortcode para exibir o formulário de cadastro de instituições:
-plaintext
-Copiar
-Editar
-[donation_form]
-Publique a página.
-Formulário de Cadastro
+1. **Painel Administrativo de Doações**  
+   - Exibe as doações realizadas com informações detalhadas:
+     - Nome e e-mail do doador.
+     - Nome da instituição beneficiada.
+     - Chave Pix da instituição.
+     - Status do pagamento: Pendente ou Pago.
+   - Possibilidade de alterar o status de pagamento diretamente no painel.
 
-Na página criada, o formulário permitirá que você cadastre novas instituições. As informações solicitadas são:
-Nome da instituição
-CNPJ
-Endereço
-Estado
-Tipo de chave PIX (CNPJ, número de celular ou chave aleatória)
-Chave PIX
-E-mail da instituição
-Cadastrar uma Instituição
+2. **Formulário de Cadastro de Instituições**  
+   - Formulário gerado via shortcode para coletar dados das instituições:
+     - Nome, CNPJ, telefone, WhatsApp.
+     - Tipo de instituição (hospital, igreja, entidade beneficente, etc.).
+     - Endereço completo (rua, número, bairro, cidade, estado, CEP).
+   - Estado disponibilizado como campo `select` com todas as opções brasileiras.
+   - Instituições cadastradas aparecem automaticamente no painel administrativo.
 
-Após preencher o formulário com os dados da instituição, clique em Cadastrar. Isso adicionará a instituição ao banco de dados do plugin e ela estará disponível para seleção no processo de checkout.
-Seleção de Instituição no Carrinho
-Durante o processo de checkout no WooCommerce, o cliente verá uma opção para escolher a instituição beneficiada.
-Ao escolher a instituição, 30% do valor da compra será destinado à instituição selecionada.
-Painel Administrativo
-No painel do WordPress, vá para Doações > Gerenciar Doações.
-Você verá uma tabela com informações sobre todas as doações, incluindo:
-Nome do cliente
-Instituição beneficiada
-Valor da doação
-Data da doação
-Status da doação (Pendente)
-E-mails Enviados
-E-mail para o cliente: Confirmação de que a doação foi realizada e destinada à instituição escolhida.
-E-mail para a instituição: Detalhes sobre a doação, incluindo o valor, o cliente e a data.
-E-mail para o administrador: Detalhes da doação realizada, incluindo nome do cliente, valor da doação e chave PIX da instituição.
-Customizações
-O código do plugin está bem estruturado e pode ser facilmente adaptado para incluir novos campos ou funcionalidades.
-Caso precise de ajustes, você pode personalizar os hooks e filtros do WooCommerce que são utilizados pelo plugin.
-Considerações Finais
-Este plugin é uma solução simples e eficiente para adicionar um sistema de doações a um site WooCommerce, permitindo que seus clientes contribuam para causas sociais de forma rápida e direta. Você pode personalizar o formulário de cadastro, as doações e o painel administrativo para atender às necessidades do seu site.
+3. **Integração ao Carrinho do WooCommerce**  
+   - Campo adicional no carrinho com um `select` para escolher a instituição que receberá a doação.
+   - Permite configurar percentuais de doação (padrão 30%, configurável entre 2% e 30%).
+   - Percentual é aplicado automaticamente ao valor total dos produtos no carrinho.
 
-Licença
-Este plugin é distribuído sob a Licença GPLv2.
+4. **Notificações por E-mail**  
+   - **Administrador**:
+     - Recebe informações detalhadas sobre cada doação realizada.
+   - **Instituição**:
+     - Notificação sobre a doação, incluindo prazo de pagamento (15 dias úteis).
+   - **Cliente**:
+     - Confirmação com informações da instituição beneficiada, incluindo contato.
+   - **Após Confirmação de Pagamento**:
+     - Notificações automáticas para o administrador, instituição e cliente.
 
-Para mais informações, acesse nosso site: https://juntoaqui.com.br
+5. **Automação de Processos**  
+   - Dados de doadores puxados automaticamente do WooCommerce.
+   - Integração direta com banco de dados para gerenciar doações e instituições.
+
+---
+
+#### **Como Instalar**
+
+1. Copie o código fornecido e salve em um arquivo PHP no diretório de temas ou plugins do WordPress.
+   - Exemplo: `wp-content/plugins/sistema-doacoes/sistema-doacoes.php`.
+2. Ative o plugin pelo painel administrativo do WordPress.
+3. Use o shortcode `[cadastro_instituicao]` para inserir o formulário de cadastro em qualquer página.
+4. Configure as opções no painel de administração de doações.
+
+---
+
+#### **Dependências**
+- WordPress.
+- WooCommerce.
+- Servidor com suporte a PHP 7.4 ou superior.
+- E-mail SMTP configurado no WordPress para envio de notificações.
+
+---
+
+#### **Como Usar**
+
+1. Acesse o painel de administração e cadastre instituições utilizando o formulário shortcode.  
+2. Certifique-se de que o WooCommerce está ativo e funcional no site.  
+3. Ao adicionar produtos ao carrinho, o cliente poderá selecionar a instituição para doação.  
+4. Gerencie os status de pagamento das doações diretamente no painel administrativo.  
+5. Verifique notificações por e-mail para acompanhar o processo de doação.
+
+---
+
+#### **Licença**  
+Este projeto está disponível para uso pessoal ou comercial. Por favor, mantenha os créditos ao autor.
+
+---
+
+#### **Contato**  
+Para mais informações, visite nosso site oficial:  
+[https://juntoaqui.com.br](https://juntoaqui.com.br)
