@@ -51,7 +51,7 @@ Este sistema foi desenvolvido para gerenciar doações no WordPress, integrado a
 1. Copie o código fornecido e salve em um arquivo PHP no diretório de temas ou plugins do WordPress.
    - Exemplo: `wp-content/plugins/sistema-doacoes/sistema-doacoes.php`.
 2. Ative o plugin pelo painel administrativo do WordPress.
-3. Use o shortcode `[cadastro_instituicao]` para inserir o formulário de cadastro em qualquer página.
+3. Use o shortcode `[donation_form]` para inserir o formulário de cadastro em qualquer página.
 4. Configure as opções no painel de administração de doações.
 
 ---
