@@ -204,12 +204,6 @@ function add_donation_selector_to_checkout($checkout) {
     global $wpdb;
     $instituicoes = $wpdb->get_results("SELECT id, nome FROM {$wpdb->prefix}instituicoes", ARRAY_A);
     if (!empty($instituicoes)) {
-        echo '<div class="donation-selector"><label>Você deseja doar para qual instituição?</label><br><select name="donation_in
-add_action('woocommerce_order_status_completed', 'donation_order_completed');
-function add_donation_selector_to_checkout($checkout) {
-    global $wpdb;
-    $instituicoes = $wpdb->get_results("SELECT id, nome FROM {$wpdb->prefix}instituicoes", ARRAY_A);
-    if (!empty($instituicoes)) {
         echo '<div class="donation-selector"><label>Você deseja doar para qual instituição?</label><br><select name="donation_institution">';
         echo '<option value="">Nenhuma</option>';
         foreach ($instituicoes as $instituicao) {
@@ -234,44 +228,36 @@ function donation_order_completed($order_id) {
 
     $donation_institution = get_post_meta($order_id, 'donation_institution', true);
     if ($donation_institution) {
+        $instituicao = get_instituicao_by_id($donation_institution); // Função que retorna a instituição
+        $valor = $order->get_total() * 0.1; // Exemplo: Doar 10% do valor do pedido
+        $email_admin = get_option('admin_email');
+        $email_instituicao = $instituicao->email;
+
+        // Enviar e-mails para administrador e instituição
+        wp_mail($email_admin, 'Doação Realizada', 'Foi realizada uma doação de R$' . $valor . ' para a instituição ' . $instituicao->nome);
+        wp_mail($email_instituicao, 'Doação Recebida', 'Você recebeu uma doação de R$' . $valor . ' através de um pedido.');
+
+        // Registrar no banco de dados
         global $wpdb;
-        $instituicao = $wpdb->get_row("SELECT * FROM {$wpdb->prefix}instituicoes WHERE id = $donation_institution");
-
-        $doacao = $order->get_total() * 0.30; // 30% da compra
-
-        $wpdb->insert($wpdb->prefix . 'doacoes', [
-            'instituicao_id' => $instituicao->id,
-            'valor' => $doacao,
-            'pedido_id' => $order_id,
-            'instituicao_nome' => $instituicao->nome,
-            'status' => 'Pendente'
-        ]);
-
-        // Enviar e-mail para a instituição
-        wp_mail($instituicao->email, 'Nova Doação Recebida', "Você recebeu uma doação de R$ {$doacao} pelo pedido #{$order_id}. Verifique o painel de doações para mais detalhes.");
+        $wpdb->insert(
+            $wpdb->prefix . 'doacoes',
+            [
+                'instituicao_id' => $instituicao->id,
+                'valor' => $valor,
+                'pedido_id' => $order_id,
+                'instituicao_nome' => $instituicao->nome,
+                'status' => 'Concluída'
+            ]
+        );
     }
 }
 add_action('woocommerce_order_status_completed', 'donation_order_completed');
 
-// Adicionar a coluna de status de doação no painel de administração
-function donation_columns($columns) {
-    $columns['donation_status'] = 'Status da Doação';
-    return $columns;
+// Função auxiliar para buscar uma instituição pelo ID
+function get_instituicao_by_id($id) {
+    global $wpdb;
+    return $wpdb->get_row("SELECT * FROM {$wpdb->prefix}instituicoes WHERE id = $id");
 }
-add_filter('manage_edit-shop_order_columns', 'donation_columns');
-
-function donation_custom_column($column, $post_id) {
-    if ('donation_status' === $column) {
-        $donation_status = get_post_meta($post_id, 'donation_status', true);
-        if ($donation_status) {
-            echo $donation_status;
-        } else {
-            echo 'N/A';
-        }
-    }
-}
-add_action('manage_shop_order_posts_custom_column', 'donation_custom_column');
-
 // Garantir que o CSS e JS já criados estejam funcionando
 add_action('wp_enqueue_scripts', function() {
     // Enqueue seu CSS
