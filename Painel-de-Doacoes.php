@@ -175,34 +175,33 @@ function donation_form_shortcode() {
         <input type="text" name="cidade" required><br>
         <label>Estado:</label><br>
         <select name="estado" required>
-    <option value="AC">Acre</option>
-    <option value="AL">Alagoas</option>
-    <option value="AP">Amapá</option>
-    <option value="AM">Amazonas</option>
-    <option value="BA">Bahia</option>
-    <option value="CE">Ceará</option>
-    <option value="DF">Distrito Federal</option>
-    <option value="ES">Espírito Santo</option>
-    <option value="GO">Goiás</option>
-    <option value="MA">Maranhão</option>
-    <option value="MT">Mato Grosso</option>
-    <option value="MS">Mato Grosso do Sul</option>
-    <option value="MG">Minas Gerais</option>
-    <option value="PA">Pará</option>
-    <option value="PB">Paraíba</option>
-    <option value="PR">Paraná</option>
-    <option value="PE">Pernambuco</option>
-    <option value="PI">Piauí</option>
-    <option value="RJ">Rio de Janeiro</option>
-    <option value="RN">Rio Grande do Norte</option>
-    <option value="RS">Rio Grande do Sul</option>
-    <option value="RO">Rondônia</option>
-    <option value="RR">Roraima</option>
-    <option value="SC">Santa Catarina</option>
-    <option value="SP">São Paulo</option>
-    <option value="SE">Sergipe</option>
-    <option value="TO">Tocantins</option>
-</select>
+            <option value="AC">Acre</option>
+            <option value="AL">Alagoas</option>
+            <option value="AP">Amapá</option>
+            <option value="AM">Amazonas</option>
+            <option value="BA">Bahia</option>
+            <option value="CE">Ceará</option>
+            <option value="DF">Distrito Federal</option>
+            <option value="ES">Espírito Santo</option>
+            <option value="GO">Goiás</option>
+            <option value="MA">Maranhão</option>
+            <option value="MT">Mato Grosso</option>
+            <option value="MS">Mato Grosso do Sul</option>
+            <option value="MG">Minas Gerais</option>
+            <option value="PA">Pará</option>
+            <option value="PB">Paraíba</option>
+            <option value="PR">Paraná</option>
+            <option value="PE">Pernambuco</option>
+            <option value="PI">Piauí</option>
+            <option value="RJ">Rio de Janeiro</option>
+            <option value="RN">Rio Grande do Norte</option>
+            <option value="RS">Rio Grande do Sul</option>
+            <option value="RO">Rondônia</option>
+            <option value="RR">Roraima</option>
+            <option value="SC">Santa Catarina</option>
+            <option value="SP">São Paulo</option>
+            <option value="SE">Sergipe</option>
+            <option value="TO">Tocantins</option>
         </select><br>
         <label>CEP:</label><br>
         <input type="text" name="cep" required><br>
@@ -210,78 +209,49 @@ function donation_form_shortcode() {
         <input type="email" name="email" required><br>
         <label>Chave Pix:</label><br>
         <input type="text" name="chave_pix" required><br>
-        <label>Senha:</label><br>
-        <input type="password" name="senha" required><br>
-        <button type="submit">Cadastrar Instituição</button>
+        <button type="submit" name="submit_instituicao">Cadastrar</button>
     </form>
     <?php
     return ob_get_clean();
 }
 add_shortcode('donation_form', 'donation_form_shortcode');
 
-// Lógica para processar o formulário de cadastro de instituição
-function donation_form_process() {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nome'])) {
+// Processar submissão do formulário
+function process_donation_form_submission() {
+    if (isset($_POST['submit_instituicao'])) {
         global $wpdb;
-        // Sanitização e validação
-        $nome = sanitize_text_field($_POST['nome']);
-        $cnpj = sanitize_text_field($_POST['cnpj']);
-        $telefone = sanitize_text_field($_POST['telefone']);
-        $whatsapp = sanitize_text_field($_POST['whatsapp']);
-        $tipo = sanitize_text_field($_POST['tipo']);
-        $endereco = sanitize_textarea_field($_POST['endereco']);
-        $cidade = sanitize_text_field($_POST['cidade']);
-        $estado = sanitize_text_field($_POST['estado']);
-        $cep = sanitize_text_field($_POST['cep']);
-        $email = sanitize_email($_POST['email']);
-        $chave_pix = sanitize_text_field($_POST['chave_pix']);
-        $senha = wp_generate_password(); // Gera uma senha aleatória
-
-        // Verificação de e-mail válido
-        if (!is_email($email)) {
-            wp_die('E-mail inválido. Por favor, insira um e-mail válido.');
-        }
-
         $data = [
-            'nome' => $nome,
-            'cnpj' => $cnpj,
-            'telefone' => $telefone,
-            'whatsapp' => $whatsapp,
-            'tipo' => $tipo,
-            'endereco' => $endereco,
-            'cidade' => $cidade,
-            'estado' => $estado,
-            'cep' => $cep,
-            'email' => $email,
-            'chave_pix' => $chave_pix,
+            'nome' => sanitize_text_field($_POST['nome']),
+            'cnpj' => sanitize_text_field($_POST['cnpj']),
+            'telefone' => sanitize_text_field($_POST['telefone']),
+            'whatsapp' => sanitize_text_field($_POST['whatsapp']),
+            'tipo' => sanitize_text_field($_POST['tipo']),
+            'endereco' => sanitize_textarea_field($_POST['endereco']),
+            'cidade' => sanitize_text_field($_POST['cidade']),
+            'estado' => sanitize_text_field($_POST['estado']),
+            'cep' => sanitize_text_field($_POST['cep']),
+            'email' => sanitize_email($_POST['email']),
+            'chave_pix' => sanitize_text_field($_POST['chave_pix']),
         ];
 
-        // Insere a instituição no banco de dados
-        $wpdb->insert($wpdb->prefix . 'instituicoes', $data);
-        $instituicao_id = $wpdb->insert_id;
+        $wpdb->insert("{$wpdb->prefix}instituicoes", $data);
 
-        // Cria o usuário no WordPress
-        $user_id = wp_create_user($nome, $senha, $email);
+        // Criação do usuário WooCommerce
+        $user_id = wp_create_user($data['email'], wp_generate_password(), $data['email']);
         if (is_wp_error($user_id)) {
-            wp_die('Erro ao criar o usuário.');
+            echo '<p>Erro ao criar usuário. Tente novamente.</p>';
+            return;
         }
 
-        // Define a função do usuário como 'instituicao'
-        $user = new WP_User($user_id);
-        $user->set_role('instituicao');
+        // Atualizar meta do usuário
+        foreach ($data as $key => $value) {
+            update_user_meta($user_id, $key, $value);
+        }
 
-        // Envia os e-mails de confirmação
-        $institution_email = $email;
-        $admin_email = get_option('admin_email');
-
-        wp_mail($institution_email, 'Cadastro Concluído', 'Parabéns, sua instituição foi cadastrada com sucesso! Sua senha é: ' . $senha);
-        wp_mail($admin_email, 'Novo Cadastro de Instituição', 'Uma nova instituição foi cadastrada no site.');
-
-        wp_redirect(add_query_arg('success', '1', wp_get_referer()));
-        exit;
+        echo '<p>Instituição cadastrada com sucesso!</p>';
     }
 }
-add_action('init', 'donation_form_process');
+add_action('init', 'process_donation_form_submission');
 
 // Adicionar o seletor de instituição no checkout
 function add_donation_selector_to_checkout($checkout) {
