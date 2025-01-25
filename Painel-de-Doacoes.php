@@ -98,6 +98,50 @@ function esd_donation_settings() {
 }
 add_action('admin_init', 'esd_donation_settings');
 
+// Adiciona o campo de seleção de instituição ao checkout do WooCommerce
+function adicionar_campo_instituicao_checkout($fields) {
+    global $wpdb;
+
+    // Obter as instituições cadastradas
+    $instituicoes = $wpdb->get_results("SELECT id, nome FROM {$wpdb->prefix}instituicoes");
+
+    // Verifica se há instituições disponíveis
+    if (!empty($instituicoes)) {
+        $opcoes = array('' => 'Selecione uma instituição');
+        foreach ($instituicoes as $instituicao) {
+            $opcoes[$instituicao->id] = $instituicao->nome;
+        }
+
+        // Adiciona o campo de seleção ao checkout
+        $fields['billing']['billing_instituicao'] = array(
+            'type' => 'select',
+            'label' => __('Instituição para Doação', 'woocommerce'),
+            'required' => true,
+            'options' => $opcoes,
+        );
+    }
+
+    return $fields;
+}
+add_filter('woocommerce_checkout_fields', 'adicionar_campo_instituicao_checkout');
+
+// Salvar o campo de instituição no meta do pedido
+function salvar_instituicao_meta_pedido($order_id) {
+    if (!empty($_POST['billing_instituicao'])) {
+        update_post_meta($order_id, '_instituicao', sanitize_text_field($_POST['billing_instituicao']));
+    }
+}
+add_action('woocommerce_checkout_update_order_meta', 'salvar_instituicao_meta_pedido');
+
+// Exibir a instituição selecionada no admin do pedido
+function exibir_instituicao_admin_pedido($order) {
+    $instituicao = get_post_meta($order->get_id(), '_instituicao', true);
+    if ($instituicao) {
+        echo '<p><strong>' . __('Instituição para Doação', 'woocommerce') . ':</strong> ' . esc_html($instituicao) . '</p>';
+    }
+}
+add_action('woocommerce_admin_order_data_after_billing_address', 'exibir_instituicao_admin_pedido', 10, 1);
+
 // Função que cria o campo de input para a porcentagem de doação
 function esd_donation_percentage_callback() {
     $value = get_option('esd_donation_percentage', 10);
