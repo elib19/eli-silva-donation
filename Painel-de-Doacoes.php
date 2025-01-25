@@ -14,6 +14,7 @@
 if (!defined('ABSPATH')) {
     exit;
 }
+
 // Ativação do plugin
 register_activation_hook(__FILE__, 'cid_create_tables');
 function cid_create_tables() {
@@ -29,8 +30,13 @@ function cid_create_tables() {
         whatsapp varchar(15),
         tipo varchar(50),
         endereco text,
+        bairro varchar(50),
+        cidade varchar(50),
+        estado varchar(2),
+        cep varchar(9),
         chave_pix varchar(50),
         email varchar(100),
+        user_id bigint(20),
         PRIMARY KEY (id)
     ) $charset_collate;";
 
@@ -47,8 +53,26 @@ function cid_instituicao_form() {
         <input type="text" name="cnpj" placeholder="CNPJ" required>
         <input type="text" name="telefone" placeholder="Telefone">
         <input type="text" name="whatsapp" placeholder="WhatsApp">
-        <input type="text" name="tipo" placeholder="Tipo (ex: hospital, igreja)">
+        <select name="tipo" required>
+            <option value="">Tipo de Instituição</option>
+            <option value="hospital_cancer">Hospital de Câncer</option>
+            <option value="igreja">Igreja</option>
+            <option value="casa_recuperacao">Casa de Recuperação</option>
+            <option value="instituicao_beneficiente">Instituição Beneficente</option>
+        </select>
         <textarea name="endereco" placeholder="Endereço"></textarea>
+        <input type="text" name="bairro" placeholder="Bairro">
+        <input type="text" name="cidade" placeholder="Cidade">
+        <select name="estado" required>
+            <option value="">Estado</option>
+            <?php
+            $estados = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
+            foreach ($estados as $estado) {
+                echo "<option value='$estado'>$estado</option>";
+            }
+            ?>
+        </select>
+        <input type="text" name="cep" placeholder="CEP">
         <input type="text" name="chave_pix" placeholder="Chave PIX">
         <input type="email" name="email" placeholder="E-mail" required>
         <input type="submit" name="submit_instituicao" value="Cadastrar Instituição">
@@ -64,6 +88,13 @@ function cid_process_instituicao_form() {
         global $wpdb;
         $table_name = $wpdb->prefix . 'instituicoes';
 
+        // Criação do usuário no WordPress
+        $user_id = wp_create_user(sanitize_text_field($_POST['nome']), wp_generate_password(), sanitize_email($_POST['email']));
+        if (is_wp_error($user_id)) {
+            echo 'Erro ao criar usuário: ' . $user_id->get_error_message();
+            return;
+        }
+
         $wpdb->insert($table_name, array(
             'nome' => sanitize_text_field($_POST['nome']),
             'cnpj' => sanitize_text_field($_POST['cnpj']),
@@ -71,12 +102,20 @@ function cid_process_instituicao_form() {
             'whatsapp' => sanitize_text_field($_POST['whatsapp']),
             'tipo' => sanitize_text_field($_POST['tipo']),
             'endereco' => sanitize_textarea_field($_POST['endereco']),
+            'bairro' => sanitize_text_field($_POST['bairro']),
+            'cidade' => sanitize_text_field($_POST['cidade']),
+            'estado' => sanitize_text_field($_POST['estado']),
+            'cep' => sanitize_text_field($_POST['cep']),
             'chave_pix' => sanitize_text_field($_POST['chave_pix']),
-            'email' => sanitize_email($_POST['email'])
+            'email' => sanitize_email($_POST['email']),
+            'user_id' => $user_id
         ));
 
         // Enviar e-mail para o administrador
         wp_mail(get_option('admin_email'), 'Nova Instituição Cadastrada', 'Uma nova instituição foi cadastrada.');
+
+        // Enviar e-mail para a instituição
+        wp_mail(sanitize_email($_POST['email']), 'Cadastro Realizado com Sucesso', 'Seu cadastro foi realizado com sucesso. Em breve entraremos em contato.');
 
         // Redirecionar com mensagem de sucesso
         wp_redirect(home_url('/?cadastro=sucesso'));
@@ -168,6 +207,7 @@ function cid_add_settings_page() {
     add_action('admin_init', 'cid_register_settings');
 }
 add_action('admin_menu', 'cid_add_settings_page');
+
 
 function cid_register_settings() {
     register_setting('cid_doacao_options', 'doacao_percentual');
