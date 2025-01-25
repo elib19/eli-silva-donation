@@ -89,6 +89,7 @@ function donation_admin_page() {
         echo '<p>Nenhuma doação registrada ainda.</p>';
     }
 }
+
 // Adiciona a opção de configuração na página de configurações do WordPress
 function esd_donation_settings() {
     add_option('esd_donation_percentage', 10);  // Valor padrão é 10%
@@ -98,48 +99,32 @@ function esd_donation_settings() {
 }
 add_action('admin_init', 'esd_donation_settings');
 
-// Adiciona o campo de seleção de instituição no checkout do WooCommerce
+// Adiciona o campo de seleção de instituição ao checkout do WooCommerce
 function adicionar_campo_instituicao_checkout($fields) {
     global $wpdb;
 
-    // Obtém as instituições cadastradas
+    // Obter as instituições cadastradas
     $instituicoes = $wpdb->get_results("SELECT id, nome FROM {$wpdb->prefix}instituicoes");
 
+    // Verifica se há instituições disponíveis
     if (!empty($instituicoes)) {
-        $opcoes = ['' => 'Selecione uma instituição'];
+        $opcoes = array('' => 'Selecione uma instituição');
         foreach ($instituicoes as $instituicao) {
             $opcoes[$instituicao->id] = $instituicao->nome;
         }
 
-        $fields['billing']['billing_instituicao'] = [
+        // Adiciona o campo de seleção ao checkout
+        $fields['billing']['billing_instituicao'] = array(
             'type' => 'select',
             'label' => __('Instituição para Doação', 'woocommerce'),
             'required' => true,
             'options' => $opcoes,
-        ];
+        );
     }
 
     return $fields;
 }
 add_filter('woocommerce_checkout_fields', 'adicionar_campo_instituicao_checkout');
-
-// Salva a instituição selecionada no meta do pedido
-function salvar_instituicao_meta_pedido($order_id) {
-    if (!empty($_POST['billing_instituicao'])) {
-        update_post_meta($order_id, '_instituicao', sanitize_text_field($_POST['billing_instituicao']));
-    }
-}
-add_action('woocommerce_checkout_update_order_meta', 'salvar_instituicao_meta_pedido');
-
-// Exibe a instituição selecionada no admin do pedido
-function exibir_instituicao_admin_pedido($order) {
-    $instituicao = get_post_meta($order->get_id(), '_instituicao', true);
-    if ($instituicao) {
-        echo '<p><strong>' . __('Instituição para Doação', 'woocommerce') . ':</strong> ' . esc_html($instituicao) . '</p>';
-    }
-}
-add_action('woocommerce_admin_order_data_after_billing_address', 'exibir_instituicao_admin_pedido', 10, 1);
-
 
 // Salvar o campo de instituição no meta do pedido
 function salvar_instituicao_meta_pedido($order_id) {
@@ -221,122 +206,59 @@ function donation_form_shortcode() {
         </select><br>
         <label>CEP:</label><br>
         <input type="text" name="cep" required><br>
-        <label>E-mail:</label><br>
-        <input type="email" name="email" required><br>
-        <label>Chave Pix:</label><br>
+        <label>Chave PIX:</label><br>
         <input type="text" name="chave_pix" required><br>
-        <button type="submit" name="submit_instituicao">Cadastrar</button>
+        <label>Email:</label><br>
+        <input type="email" name="email" required><br><br>
+        <button type="submit" name="submit_instituicao">Cadastrar Instituição</button>
     </form>
     <?php
-    return ob_get_clean();
-}
-add_shortcode('donation_form', 'donation_form_shortcode');
 
-// Processar submissão do formulário
-function process_donation_form_submission() {
     if (isset($_POST['submit_instituicao'])) {
         global $wpdb;
-        $data = [
-            'nome' => sanitize_text_field($_POST['nome']),
-            'cnpj' => sanitize_text_field($_POST['cnpj']),
-            'telefone' => sanitize_text_field($_POST['telefone']),
-            'whatsapp' => sanitize_text_field($_POST['whatsapp']),
-            'tipo' => sanitize_text_field($_POST['tipo']),
-            'endereco' => sanitize_textarea_field($_POST['endereco']),
-            'cidade' => sanitize_text_field($_POST['cidade']),
-            'estado' => sanitize_text_field($_POST['estado']),
-            'cep' => sanitize_text_field($_POST['cep']),
-            'email' => sanitize_email($_POST['email']),
-            'chave_pix' => sanitize_text_field($_POST['chave_pix']),
-        ];
 
-        $wpdb->insert("{$wpdb->prefix}instituicoes", $data);
+        $nome = sanitize_text_field($_POST['nome']);
+        $cnpj = sanitize_text_field($_POST['cnpj']);
+        $telefone = sanitize_text_field($_POST['telefone']);
+        $whatsapp = sanitize_text_field($_POST['whatsapp']);
+        $tipo = sanitize_text_field($_POST['tipo']);
+        $endereco = sanitize_textarea_field($_POST['endereco']);
+        $cidade = sanitize_text_field($_POST['cidade']);
+        $estado = sanitize_text_field($_POST['estado']);
+        $cep = sanitize_text_field($_POST['cep']);
+        $chave_pix = sanitize_text_field($_POST['chave_pix']);
+        $email = sanitize_email($_POST['email']);
 
-        // Criação do usuário WooCommerce
-        $user_id = wp_create_user($data['email'], wp_generate_password(), $data['email']);
-        if (is_wp_error($user_id)) {
-            echo '<p>Erro ao criar usuário. Tente novamente.</p>';
-            return;
-        }
+        $wpdb->insert(
+            $wpdb->prefix . 'instituicoes',
+            array(
+                'nome' => $nome,
+                'cnpj' => $cnpj,
+                'telefone' => $telefone,
+                'whatsapp' => $whatsapp,
+                'tipo' => $tipo,
+                'endereco' => $endereco,
+                'cidade' => $cidade,
+                'estado' => $estado,
+                'cep' => $cep,
+                'chave_pix' => $chave_pix,
+                'email' => $email
+            )
+        );
 
-        // Atualizar meta do usuário
-        foreach ($data as $key => $value) {
-            update_user_meta($user_id, $key, $value);
-        }
+        wp_mail(
+            get_option('admin_email'), // E-mail do administrador
+            'Nova Instituição Cadastrada',
+            "Uma nova instituição foi cadastrada. Nome: $nome, CNPJ: $cnpj, Email: $email"
+        );
 
         echo '<p>Instituição cadastrada com sucesso!</p>';
     }
+
+    return ob_get_clean();
 }
-add_action('init', 'process_donation_form_submission');
+add_shortcode('form_doacao', 'donation_form_shortcode');
 
-// Adicionar o seletor de instituição no checkout
-function add_donation_selector_to_checkout($checkout) {
-    global $wpdb;
-    // Certifique-se de que a tabela existe e que há dados na tabela 'instituicoes'
-    $instituicoes = $wpdb->get_results("SELECT id, nome FROM {$wpdb->prefix}instituicoes", ARRAY_A);
-    
-    if (!empty($instituicoes)) {
-        echo '<div class="donation-selector"><label>Você deseja doar para qual instituição?</label><br><select name="donation_institution">';
-        echo '<option value="">Nenhuma</option>';
-        foreach ($instituicoes as $instituicao) {
-            echo '<option value="' . esc_attr($instituicao['id']) . '">' . esc_html($instituicao['nome']) . '</option>';
-        }
-        echo '</select></div>';
-    } else {
-        echo '<p>Não há instituições cadastradas para doação.</p>';
-    }
-}
-add_action('woocommerce_after_order_notes', 'add_donation_selector_to_checkout');
-
-// Salvar a instituição selecionada no pedido
-function save_donation_institution($order_id) {
-    if (isset($_POST['donation_institution']) && !empty($_POST['donation_institution'])) {
-        update_post_meta($order_id, 'donation_institution', sanitize_text_field($_POST['donation_institution']));
-    }
-}
-add_action('woocommerce_checkout_update_order_meta', 'save_donation_institution');
-
-// Calcular e exibir a doação após a compra ser concluída
-function donation_order_completed($order_id) {
-    $order = wc_get_order($order_id);
-
-    $donation_institution = get_post_meta($order_id, 'donation_institution', true);
-    if ($donation_institution) {
-        $instituicao = get_instituicao_by_id($donation_institution); // Função que retorna a instituição
-        // Obtém a porcentagem configurada no painel de administração
-        $percentagem = get_option('esd_donation_percentage', 10);  // Valor padrão é 10%
-
-        // Calcula o valor da doação com a porcentagem configurada
-        $valor = $order->get_total() * ($percentagem / 100);
-
-        $email_admin = get_option('admin_email');
-        $email_instituicao = $instituicao->email;
-
-        // Enviar e-mails para administrador e instituição
-        wp_mail($email_admin, 'Doação Realizada', 'Foi realizada uma doação de R$' . $valor . ' para a instituição ' . $instituicao->nome);
-        wp_mail($email_instituicao, 'Doação Recebida', 'Você recebeu uma doação de R$' . $valor . ' através de um pedido.');
-
-        // Registrar no banco de dados
-        global $wpdb;
-        $wpdb->insert(
-            $wpdb->prefix . 'doacoes',
-            [
-                'instituicao_id' => $instituicao->id,
-                'valor' => $valor,
-                'pedido_id' => $order_id,
-                'instituicao_nome' => $instituicao->nome,
-                'status' => 'Concluída'
-            ]
-        );
-    }
-}
-add_action('woocommerce_order_status_completed', 'donation_order_completed');
-
-// Função auxiliar para buscar uma instituição pelo ID
-function get_instituicao_by_id($id) {
-    global $wpdb;
-    return $wpdb->get_row("SELECT * FROM {$wpdb->prefix}instituicoes WHERE id = $id");
-}
 // Garantir que o CSS e JS já criados estejam funcionando
 add_action('wp_enqueue_scripts', function() {
     // Enqueue seu CSS
