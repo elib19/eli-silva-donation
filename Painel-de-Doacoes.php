@@ -1,11 +1,19 @@
 <?php
-/*
-Plugin Name: Cadastro de Instituições para Doação
-Description: Plugin para cadastrar instituições que podem receber doações e integrar com o WooCommerce.
-Version: 1.0
-Author: Seu Nome
-*/
+/**
+ * Plugin Name: Painel de Doações
+ * Plugin URI: https://juntoaqui.com.br
+ * Description: Plugin para adicionar funcionalidades de doação ao WooCommerce, com seleção de instituição no checkout e envio de e-mail para o administrador.
+ * Version: 1.1.0
+ * Author: Eli Silva
+ * Author URI: https://juntoaqui.com.br
+ * Text Domain: Painel de Doações
+ * Domain Path: /languages
+ */
 
+// Impedir acesso direto ao arquivo
+if (!defined('ABSPATH')) {
+    exit;
+}
 // Ativação do plugin
 register_activation_hook(__FILE__, 'cid_create_tables');
 function cid_create_tables() {
