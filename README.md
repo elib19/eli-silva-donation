@@ -21,19 +21,23 @@ Este sistema foi desenvolvido para gerenciar doações no WordPress, integrado a
 2. **Formulário de Cadastro de Instituições**  
    - Formulário gerado via shortcode para coletar dados das instituições:
      - Nome, CNPJ, telefone, WhatsApp.
-     - Tipo de instituição (hospital, igreja, casa de recuperação, entidade beneficente, etc.).
+     - Tipo de instituição (hospital, igreja, entidade beneficente, etc.).
      - Endereço completo (rua, número, bairro, cidade, estado, CEP).
    - Estado disponibilizado como campo `select` com todas as opções brasileiras.
    - Campo para depoimento da instituição.
    - Instituições cadastradas aparecem automaticamente no painel administrativo.
 
-3. **Integração ao Carrinho do WooCommerce**  
+3. **Formulário para Cadastrar ou Editar Depoimentos**  
+   - Shortcode `[form_depoimento]` para permitir que as instituições logadas adicionem ou editem seus depoimentos.
+   - O depoimento é armazenado como um meta dado do usuário.
+
+4. **Integração ao Carrinho do WooCommerce**  
    - Campo adicional no carrinho com um `select` para escolher a instituição que receberá a doação.
    - Permite configurar percentuais de doação (padrão 30%, configurável entre 0% e 100%).
    - Percentual é aplicado automaticamente ao valor total dos produtos no carrinho.
    - O campo de seleção da instituição é obrigatório apenas se houver pelo menos uma instituição cadastrada.
 
-4. **Notificações por E-mail**  
+5. **Notificações por E-mail**  
    - **Administrador**:
      - Recebe informações detalhadas sobre cada doação realizada.
    - **Instituição**:
@@ -43,9 +47,17 @@ Este sistema foi desenvolvido para gerenciar doações no WordPress, integrado a
    - **Após Confirmação de Pagamento**:
      - Notificações automáticas para o administrador, instituição e cliente.
 
-5. **Automação de Processos**  
+6. **Automação de Processos**  
    - Dados de doadores puxados automaticamente do WooCommerce.
    - Integração direta com banco de dados para gerenciar doações e instituições.
+
+---
+
+#### **Shortcodes Disponíveis**
+
+- **[form_doacao]**: Exibe o formulário de cadastro de instituições.
+- **[form_depoimento]**: Exibe o formulário para que as instituições logadas possam cadastrar ou editar seus depoimentos.
+- **[exibir_depoimentos]**: Exibe os depoimentos das instituições cadastradas.
 
 ---
 
@@ -55,7 +67,9 @@ Este sistema foi desenvolvido para gerenciar doações no WordPress, integrado a
    - Exemplo: `wp-content/plugins/sistema-doacoes/sistema-doacoes.php`.
 2. Ative o plugin pelo painel administrativo do WordPress.
 3. Use o shortcode `[form_doacao]` para inserir o formulário de cadastro em qualquer página.
-4. Configure as opções no painel de administração de doações.
+4. Use o shortcode `[form_depoimento]` para permitir que as instituições logadas adicionem ou editem seus depoimentos.
+5. Use o shortcode `[exibir_depoimentos]` para mostrar os depoimentos cadastrados em qualquer página ou post.
+6. Configure as opções no painel de administração de doações.
 
 ---
 
@@ -72,8 +86,9 @@ Este sistema foi desenvolvido para gerenciar doações no WordPress, integrado a
 1. Acesse o painel de administração e cadastre instituições utilizando o formulário shortcode.  
 2. Certifique-se de que o WooCommerce está ativo e funcional no site.  
 3. Ao adicionar produtos ao carrinho, o cliente poderá selecionar a instituição para doação.  
-4. Gerencie os status de pagamento das doações diretamente no painel administrativo.  
-5. Verifique notificações por e-mail para acompanhar o processo de doação.
+4. As instituições podem usar o shortcode `[form_depoimento]` para acessar o formulário de depoimento e cadastrar ou editar suas experiências.  
+5. Gerencie os status de pagamento das doações diretamente no painel administrativo.  
+6. Verifique notificações por e-mail para acompanhar o processo de doação.
 
 ---
 
