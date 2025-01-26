@@ -173,6 +173,46 @@ function cid_exibir_depoimentos() {
 }
 add_shortcode('exibir_depoimentos', 'cid_exibir_depoimentos');
 
+// Formulário para cadastrar ou editar depoimento
+function cid_depoimento_form() {
+    if (!is_user_logged_in()) {
+        return 'Você precisa estar logado para deixar um depoimento.';
+    }
+
+    $user_id = get_current_user_id();
+    $depoimento = get_user_meta($user_id, 'depoimento', true); // Recupera o depoimento existente, se houver
+
+    ob_start(); ?>
+    <form action="" method="post">
+        <?php wp_nonce_field('cid_depoimento_nonce', 'cid_depoimento_nonce_field'); ?>
+        <textarea name="depoimento" placeholder="Deixe seu depoimento" required><?php echo esc_textarea($depoimento); ?></textarea>
+        <input type="submit" name="submit_depoimento" value="Salvar Depoimento">
+    </form>
+    <?php
+    return ob_get_clean();
+}
+add_shortcode('form_depoimento', 'cid_depoimento_form');
+
+// Processamento do formulário de depoimento
+function cid_process_depoimento_form() {
+    if (isset($_POST['submit_depoimento']) && isset($_POST['cid_depoimento_nonce_field']) && wp_verify_nonce($_POST['cid_depoimento_nonce_field'], 'cid_depoimento_nonce')) {
+        if (!is_user_logged_in()) {
+            return; // Se não estiver logado, não faz nada
+        }
+
+        $user_id = get_current_user_id();
+        $depoimento = sanitize_textarea_field($_POST['depoimento']);
+
+        // Armazenar ou atualizar o depoimento
+        update_user_meta($user_id, 'depoimento', $depoimento);
+
+        // Redirecionar ou mostrar uma mensagem de sucesso
+        wp_redirect(home_url('/?depoimento=sucesso')); // Redireciona para uma página de sucesso
+        exit;
+    }
+}
+add_action('init', 'cid_process_depoimento_form');
+
 // Adicionar campo de seleção de instituição na página do produto
 function cid_add_donation_field_to_product() {
     global $product;
