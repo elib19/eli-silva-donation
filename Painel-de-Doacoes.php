@@ -21,9 +21,8 @@ function cid_create_tables() {
     global $wpdb;
     $charset_collate = $wpdb->get_charset_collate();
 
-    // Tabela de instituições
-    $table_name_instituicoes = $wpdb->prefix . 'instituicoes';
-    $sql_instituicoes = "CREATE TABLE $table_name_instituicoes (
+    $table_name = $wpdb->prefix . 'instituicoes';
+    $sql = "CREATE TABLE $table_name (
         id mediumint(9) NOT NULL AUTO_INCREMENT,
         nome tinytext NOT NULL,
         cnpj varchar(18) NOT NULL,
@@ -41,19 +40,8 @@ function cid_create_tables() {
         PRIMARY KEY (id)
     ) $charset_collate;";
 
-    // Tabela de feedback
-    $table_name_feedback = $wpdb->prefix . 'feedback';
-    $sql_feedback = "CREATE TABLE $table_name_feedback (
-        id mediumint(9) NOT NULL AUTO_INCREMENT,
-        instituicao_id bigint(20) NOT NULL,
-        feedback text NOT NULL,
-        created_at datetime DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (id)
-    ) $charset_collate;";
-
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-    dbDelta($sql_instituicoes);
-    dbDelta($sql_feedback);
+    dbDelta($sql);
 }
 
 // Criação do formulário de cadastro
@@ -61,56 +49,32 @@ function cid_instituicao_form() {
     ob_start(); ?>
     <form action="" method="post">
         <!-- Campos do formulário -->
-        <label for="nome">Nome da Instituição</label><br>
-        <input type="text" name="nome" id="nome" required><br><br>
-
-        <label for="cnpj">CNPJ</label><br>
-        <input type="text" name="cnpj" id="cnpj" required><br><br>
-
-        <label for="telefone">Telefone</label><br>
-        <input type="text" name="telefone" id="telefone"><br><br>
-
-        <label for="whatsapp">WhatsApp</label><br>
-        <input type="text" name="whatsapp" id="whatsapp"><br><br>
-
-        <label for="tipo">Tipo de Instituição</label><br>
-        <select name="tipo" id="tipo" required>
-            <option value="">Selecione o tipo</option>
+        <input type="text" name="nome" placeholder="Nome da Instituição" required>
+        <input type="text" name="cnpj" placeholder="CNPJ" required>
+        <input type="text" name="telefone" placeholder="Telefone">
+        <input type="text" name="whatsapp" placeholder="WhatsApp">
+        <select name="tipo" required>
+            <option value="">Tipo de Instituição</option>
             <option value="hospital_cancer">Hospital de Câncer</option>
             <option value="igreja">Igreja</option>
             <option value="casa_recuperacao">Casa de Recuperação</option>
             <option value="instituicao_beneficiente">Instituição Beneficente</option>
-        </select><br><br>
-
-        <label for="endereco">Endereço</label><br>
-        <textarea name="endereco" id="endereco"></textarea><br><br>
-
-        <label for="bairro">Bairro</label><br>
-        <input type="text" name="bairro" id="bairro"><br><br>
-
-        <label for="cidade">Cidade</label><br>
-        <input type="text" name="cidade" id="cidade"><br><br>
-
-        <label for="estado">Estado</label><br>
-        <select name="estado" id="estado" required>
-            <option value="">Selecione o estado</option>
+        </select>
+        <textarea name="endereco" placeholder="Endereço"></textarea>
+        <input type="text" name="bairro" placeholder="Bairro">
+        <input type="text" name="cidade" placeholder="Cidade">
+        <select name="estado" required>
+            <option value="">Estado</option>
             <?php
             $estados = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
             foreach ($estados as $estado) {
                 echo "<option value='$estado'>$estado</option>";
             }
             ?>
-        </select><br><br>
-
-        <label for="cep">CEP</label><br>
-        <input type="text" name="cep" id="cep"><br><br>
-
-        <label for="chave_pix">Chave PIX</label><br>
-        <input type="text" name="chave_pix" id="chave_pix"><br><br>
-
-        <label for="email">E-mail</label><br>
-        <input type="email" name="email" id="email" required><br><br>
-
+        </select>
+        <input type="text" name="cep" placeholder="CEP">
+        <input type="text" name="chave_pix" placeholder="Chave PIX">
+        <input type="email" name="email" placeholder="E-mail" required>
         <input type="submit" name="submit_instituicao" value="Cadastrar Instituição">
     </form>
     <?php
@@ -189,12 +153,22 @@ function cid_add_donation_field_to_product() {
             'class' => array('form-row-wide'),
             'label' => __('Para qual instituição você deseja doar?'),
             'options' => cid_get_instituicoes(),
-            'required' => false, // Torna o campo não obrigatório
+            'required' => true, // Torna o campo obrigatório
         ), '');
         echo '</div>';
     }
 }
 add_action('woocommerce_before_add_to_cart_button', 'cid_add_donation_field_to_product');
+
+// Validar a seleção da instituição antes de adicionar ao carrinho
+function cid_validate_donation_field($passed, $product_id) {
+    if (isset($_POST['instituicao']) && empty($_POST['instituicao'])) {
+        wc_add_notice(__('Por favor, escolha uma instituição para doação.'), 'error');
+        return false;
+    }
+    return $passed;
+}
+add_filter('woocommerce_add_to_cart_validation', 'cid_validate_donation_field', 10, 2);
 
 // Salvar instituição escolhida no pedido
 function cid_save_donation_field($order_id) {
@@ -272,7 +246,6 @@ function cid_get_instituicoes() {
 // Página de administração das doações
 function cid_add_donation_menu() {
     add_menu_page('Doações', 'Doações', 'manage_options', 'cid-doacoes', 'cid_doacoes_page');
-    add_submenu_page('cid-doacoes', 'Relatórios de Doações', 'Relatórios', 'manage_options', 'cid-reports', 'cid_reports_page');
 }
 add_action('admin_menu', 'cid_add_donation_menu');
 
@@ -301,7 +274,7 @@ function cid_doacoes_page() {
                 <?php foreach ($results as $row) : ?>
                     <tr>
                         <td><?php echo esc_html($row->ID); ?></td>
-                        <td><?php echo esc_html(get_post_meta($row->ID, '_instituicao', true)); ?></td>
+                                <td><?php echo esc_html(get_post_meta($row->ID, '_instituicao', true)); ?></td>
                         <td><?php echo esc_html(get_post_meta($row->ID, '_donation_amount', true)); ?></td>
                         <td><?php echo esc_html(get_post_meta($row->ID, '_order_status', true)); ?></td>
                         <td><?php echo esc_html(get_post_meta($row->ID, '_billing_first_name', true) . ' ' . get_post_meta($row->ID, '_billing_last_name', true)); ?></td>
@@ -316,90 +289,75 @@ function cid_doacoes_page() {
     <?php
 }
 
-function cid_reports_page() {
-    global $wpdb;
+// Alterar status da doação para "pago"
+function cid_change_donation_status($order_id) {
+    if (isset($_POST['change_donation_status']) && $_POST['change_donation_status'] === 'pago') {
+        // Atualizar o status da doação
+        update_post_meta($order_id, '_order_status', 'pago');
 
-    // Obter total de doações
-    $total_donations = $wpdb->get_var("SELECT SUM(meta_value) FROM {$wpdb->prefix}postmeta WHERE meta_key = '_donation_amount'");
+        // Enviar e-mail para o cliente
+        $instituicao_id = get_post_meta($order_id, '_instituicao', true);
+        $instituicao_nome = get_userdata($instituicao_id)->display_name;
+        $instituicao_telefone = get_user_meta($instituicao_id, 'telefone', true);
+        $donation_amount = get_post_meta($order_id, '_donation_amount', true);
 
-    // Obter número de doadores
-    $total_donors = $wpdb->get_var("SELECT COUNT(DISTINCT user_id) FROM {$wpdb->prefix}instituicoes");
+        $client_email = get_post_meta($order_id, '_billing_email', true);
+        $client_message = "Sua doação de R$ " . number_format($donation_amount, 2, ',', '.') . " para a instituição " . $instituicao_nome . " foi paga.\n";
+        $client_message .= "Telefone da instituição: " . $instituicao_telefone . "\n";
+        $client_message .= "Se tiver dúvidas, entre em contato com a instituição.";
+        wp_mail($client_email, 'Confirmação de Pagamento da Doação', $client_message);
 
-    // Obter instituições
-    $institutions = $wpdb->get_results("SELECT nome, COUNT(*) as donation_count FROM {$wpdb->prefix}instituicoes GROUP BY nome");
+        // Enviar e-mail para a instituição
+        $instituicao_email = get_userdata($instituicao_id)->user_email;
+        $instituicao_message = "Você recebeu um pagamento de doação!\n\n";
+        $instituicao_message .= "Cliente: " . get_post_meta($order_id, '_billing_first_name', true) . " " . get_post_meta($order_id, '_billing_last_name', true) . "\n";
+        $instituicao_message .= "Valor pago: R$ " . number_format($donation_amount, 2, ',', '.') . "\n";
+        $instituicao_message .= "Por favor, confira seu extrato bancário.";
+        wp_mail($instituicao_email, 'Pagamento de Doação Recebido', $instituicao_message);
 
+        // Enviar e-mail para o administrador
+        $admin_message = "Doação paga!\n\n";
+        $admin_message .= "Cliente: " . get_post_meta($order_id, '_billing_first_name', true) . " " . get_post_meta($order_id, '_billing_last_name', true) . "\n";
+        $admin_message .= "Instituição: " . $instituicao_nome . "\n";
+        $admin_message .= "Valor pago: R$ " . number_format($donation_amount, 2, ',', '.') . "\n";
+        $admin_message .= "Chave PIX da instituição: " . get_user_meta($instituicao_id, 'chave_pix', true) . "\n";
+        wp_mail(get_option('admin_email'), 'Doação Paga', $admin_message);
+    }
+}
+add_action('woocommerce_order_status_changed', 'cid_change_donation_status');
+
+// Adicionar configuração de porcentagem de doação
+function cid_add_settings_page() {
+    add_options_page('Configurações de Doação', 'Doação', 'manage_options', 'cid-doacao-settings', 'cid_doacao_settings_page');
+    add_action('admin_init', 'cid_register_settings');
+}
+add_action('admin_menu', 'cid_add_settings_page');
+
+function cid_register_settings() {
+    register_setting('cid_doacao_options', 'doacao_percentual');
+    add_settings_section('cid_doacao_section', 'Configurações de Doação', null, 'cid_doacao_settings');
+    add_settings_field('doacao_percentual', 'Percentual de Doação', 'cid_doacao_percentual_callback', 'cid_doacao_settings', 'cid_doacao_section');
+}
+
+function cid_doacao_settings_page() {
     ?>
     <div class="wrap">
-        <h1>Relatórios de Doações</h1>
-        <p><strong>Total de Doações:</strong> R$ <?php echo number_format($total_donations, 2, ',', '.'); ?></p>
-        <p><strong>Total de Doadores:</strong> <?php echo $total_donors; ?></p>
-
-        <h2>Instituições Mais Beneficiadas</h2>
-        <table class="wp-list-table widefat fixed striped">
-            <thead>
-                <tr>
-                    <th>Instituição</th>
-                    <th>Número de Doações</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($institutions as $institution) : ?>
-                    <tr>
-                        <td><?php echo esc_html($institution->nome); ?></td>
-                        <td><?php echo esc_html($institution->donation_count); ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+        <h1>Configurações de Doação</h1>
+        <form method="post" action="options.php">
+            <?php
+            settings_fields('cid_doacao_options');
+            do_settings_sections('cid_doacao_settings');
+            submit_button();
+            ?>
+        </form>
     </div>
     <?php
 }
 
-// Implementar feedback
-function cid_feedback_form() {
-    ob_start(); ?>
-    <form action="" method="post">
-        <label for="instituicao_feedback">Instituição</label><br>
-        <select name="instituicao_feedback" id="instituicao_feedback" required>
-            <?php
-            $instituicoes = cid_get_instituicoes();
-            foreach ($instituicoes as $id => $nome) {
-                echo "<option value='$id'>$nome</option>";
-            }
-            ?>
-        </select><br><br>
-
-        <label for="feedback">Seu Feedback</label><br>
-        <textarea name="feedback" id="feedback" required></textarea><br><br>
-
-        <input type="submit" name="submit_feedback" value="Enviar Feedback">
-    </form>
-    <?php
-    return ob_get_clean();
+function cid_doacao_percentual_callback() {
+    $percentual = get_option('doacao_percentual', 30); // Alterado para 30%
+    echo '<input type="number" name="doacao_percentual" value="' . esc_attr($percentual) . '" min="0" max="100" /> %';
 }
-add_shortcode('form_feedback', 'cid_feedback_form');
-
-function cid_process_feedback_form() {
-    if (isset($_POST['submit_feedback'])) {
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'feedback';
-
-        $wpdb->insert($table_name, array(
-            'instituicao_id' => sanitize_text_field($_POST['instituicao_feedback']),
-            'feedback' => sanitize_textarea_field($_POST['feedback']),
-            'created_at' => current_time('mysql')
-        ));
-
-        // Enviar e-mail para a instituição
-        $instituicao_email = get_userdata(sanitize_text_field($_POST['instituicao_feedback']))->user_email;
-        wp_mail($instituicao_email, 'Novo Feedback Recebido', 'Você recebeu um novo feedback.');
-
-        // Redirecionar com mensagem de sucesso
-        wp_redirect(home_url('/?feedback=sucesso'));
-        exit;
-    }
-}
-add_action('init', 'cid_process_feedback_form');
 
 // Garantir que o CSS e JS já criados estejam funcionando
 add_action('wp_enqueue_scripts', function() {
@@ -408,10 +366,4 @@ add_action('wp_enqueue_scripts', function() {
     
     // Enqueue seu JS
     wp_enqueue_script('meu-script', plugin_dir_url(__FILE__) .'assets/js/eli-silva-donation.js', [], false, true);
-    
-    // Enqueue scripts e estilos adicionais para feedback e relatórios
-    wp_enqueue_style('feedback-style', plugin_dir_url(__FILE__) .'assets/css/feedback.css');
-    wp_enqueue_script('feedback-script', plugin_dir_url(__FILE__) .'assets/js/eli-silva-donation.js', [], false, true);
-    
-    wp_enqueue_style('reports-style', plugin_dir_url(__FILE__) .'assets/css/reports.css');
-    wp_enqueue_script('reports-script', plugin_dir_url(__FILE__) .'assets/js/reports.js', [], false, true);
+});
