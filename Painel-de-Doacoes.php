@@ -137,7 +137,7 @@ add_action('woocommerce_after_order_notes', 'cid_add_donation_field_to_checkout'
 
 // Salvar instituição escolhida no pedido
 function cid_save_donation_field($order_id) {
-    if ($_POST['instituicao']) {
+    if (isset($_POST['instituicao']) && !empty($_POST['instituicao'])) {
         update_post_meta($order_id, '_instituicao', sanitize_text_field($_POST['instituicao']));
     }
 }
@@ -147,7 +147,7 @@ add_action('woocommerce_checkout_update_order_meta', 'cid_save_donation_field');
 function cid_display_donation_in_order_admin($order) {
     $instituicao = get_post_meta($order->get_id(), '_instituicao', true);
     if ($instituicao) {
-        echo '<p><strong>' . __('Instituição para Doação') . ':</strong> ' . $instituicao . '</p>';
+        echo '<p><strong>' . __('Instituição para Doação') . ':</strong> ' . esc_html($instituicao) . '</p>';
     }
 }
 add_action('woocommerce_admin_order_data_after_billing_address', 'cid_display_donation_in_order_admin');
@@ -158,6 +158,7 @@ function cid_get_instituicoes() {
     $table_name = $wpdb->prefix . 'instituicoes';
     $results = $wpdb->get_results("SELECT id, nome FROM $table_name");
     $instituicoes = array();
+    $instituicoes[0] = __('Selecione uma instituição'); // Adiciona uma opção padrão
     foreach ($results as $row) {
         $instituicoes[$row->id] = $row->nome;
     }
@@ -172,8 +173,9 @@ add_action('admin_menu', 'cid_add_donation_menu');
 
 function cid_doacoes_page() {
     global $wpdb;
-    $table_name = $wpdb->prefix . 'orders';
-    $results = $wpdb->get_results("SELECT * FROM $table_name WHERE meta_key = '_instituicao'");
+    $table_name = $wpdb->prefix . 'posts'; // Corrigido para a tabela de pedidos
+    $results = $wpdb->get_results("SELECT ID FROM $table_name WHERE post_type = 'shop_order'");
+
     ?>
     <div class="wrap">
         <h1>Doações</h1>
@@ -189,10 +191,10 @@ function cid_doacoes_page() {
             <tbody>
                 <?php foreach ($results as $row) : ?>
                     <tr>
-                        <td><?php echo esc_html($row->order_id); ?></td>
-                        <td><?php echo esc_html(get_post_meta($row->order_id, '_instituicao', true)); ?></td>
-                        <td><?php echo esc_html(get_post_meta($row->order_id, '_order_total', true) * (get_option('doacao_percentual') / 100)); ?></td>
-                        <td><?php echo esc_html(get_post_meta($row->order_id, '_order_status', true)); ?></td>
+                        <td><?php echo esc_html($row->ID); ?></td>
+                        <td><?php echo esc_html(get_post_meta($row->ID, '_instituicao', true)); ?></td>
+                        <td><?php echo esc_html(get_post_meta($row->ID, '_order_total', true)); ?></td>
+                        <td><?php echo esc_html(get_post_meta($row->ID, '_order_status', true)); ?></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -207,7 +209,6 @@ function cid_add_settings_page() {
     add_action('admin_init', 'cid_register_settings');
 }
 add_action('admin_menu', 'cid_add_settings_page');
-
 
 function cid_register_settings() {
     register_setting('cid_doacao_options', 'doacao_percentual');
