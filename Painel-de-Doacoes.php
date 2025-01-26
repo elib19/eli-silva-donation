@@ -411,7 +411,7 @@ add_action('wp_enqueue_scripts', function() {
     
     // Enqueue scripts e estilos adicionais para feedback e relatórios
     wp_enqueue_style('feedback-style', plugin_dir_url(__FILE__) .'assets/css/feedback.css');
-    wp_enqueue_script('feedback-script', plugin_dir_url(__FILE__) .'assets/js/feedback.js', [], false, true);
+    wp_enqueue_script('feedback-script', plugin_dir_url(__FILE__) .'assets/js/eli-silva-donation.js', [], false, true);
     
     wp_enqueue_style('reports-style', plugin_dir_url(__FILE__) .'assets/css/reports.css');
     wp_enqueue_script('reports-script', plugin_dir_url(__FILE__) .'assets/js/reports.js', [], false, true);
