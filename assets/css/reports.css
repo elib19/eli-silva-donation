@@ -1,0 +1,8 @@
+/* Estilos específicos para a página de relatórios */
+.reports-table {
+    margin-top: 20px;
+}
+
+.reports-table th, .reports-table td {
+    text-align: center;
+}
