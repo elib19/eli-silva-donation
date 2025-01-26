@@ -99,6 +99,18 @@ function cid_process_instituicao_form() {
         $user = new WP_User($user_id);
         $user->set_role('subscriber');
 
+        // Armazenar dados da instituição no perfil do usuário
+        update_user_meta($user_id, 'telefone', sanitize_text_field($_POST['telefone']));
+        update_user_meta($user_id, 'whatsapp', sanitize_text_field($_POST['whatsapp']));
+        update_user_meta($user_id, 'tipo', sanitize_text_field($_POST['tipo']));
+        update_user_meta($user_id, 'endereco', sanitize_textarea_field($_POST['endereco']));
+        update_user_meta($user_id, 'bairro', sanitize_text_field($_POST['bairro']));
+        update_user_meta($user_id, 'cidade', sanitize_text_field($_POST['cidade']));
+        update_user_meta($user_id, 'estado', sanitize_text_field($_POST['estado']));
+        update_user_meta($user_id, 'cep', sanitize_text_field($_POST['cep']));
+        update_user_meta($user_id, 'chave_pix', sanitize_text_field($_POST['chave_pix']));
+        update_user_meta($user_id, 'email', sanitize_email($_POST['email']));
+
         $wpdb->insert($table_name, array(
             'nome' => sanitize_text_field($_POST['nome']),
             'cnpj' => sanitize_text_field($_POST['cnpj']),
@@ -116,10 +128,10 @@ function cid_process_instituicao_form() {
         ));
 
         // Enviar e-mail para o administrador
-        wp_mail(get_option('admin_email'), 'Nova Instituição Cadastrada', 'Uma nova instituição foi cadastrada.');
+        wp_mail(get_option('admin_email'), 'Nova Instituição Cadastrada', 'Uma nova instituição foi cadastrada: ' . sanitize_text_field($_POST['nome']) . ' - Tipo: ' . sanitize_text_field($_POST['tipo']));
 
         // Enviar e-mail para a instituição
-        wp_mail(sanitize_email($_POST['email']), 'Cadastro Realizado com Sucesso', 'Seu cadastro foi realizado com sucesso. Em breve entraremos em contato.');
+        wp_mail(sanitize_email($_POST['email']), 'Cadastro Realizado com Sucesso', 'Seu cadastro foi realizado com sucesso. Em breve entraremos em contato. Sua senha de acesso é: ' . wp_generate_password());
 
         // Redirecionar com mensagem de sucesso
         wp_redirect(home_url('/?cadastro=sucesso'));
@@ -170,6 +182,34 @@ function cid_save_donation_field($order_id) {
 
         // Salvar o valor da doação
         update_post_meta($order_id, '_donation_amount', $donation_amount);
+
+        // Enviar e-mail para o cliente
+        $instituicao_id = sanitize_text_field($_POST['instituicao']);
+        $instituicao_email = get_userdata($instituicao_id)->user_email;
+        $instituicao_nome = get_userdata($instituicao_id)->display_name;
+        $instituicao_telefone = get_user_meta($instituicao_id, 'telefone', true);
+        
+        $site_name = get_bloginfo('name');
+        $message = "Obrigado por sua doação!\n\n";
+        $message .= "Você doou R$ " . number_format($donation_amount, 2, ',', '.') . " para a instituição " . $instituicao_nome . ".\n";
+        $message .= "Telefone da instituição: " . $instituicao_telefone . "\n";
+        $message .= "A doação pode demorar até 30 dias para ser paga.\n";
+        wp_mail(get_post_meta($order_id, '_billing_email', true), 'Confirmação de Doação', $message);
+
+        // Enviar e-mail para a instituição
+        $message_instituicao = "Você recebeu uma nova doação!\n\n";
+        $message_instituicao .= "Cliente: " . get_post_meta($order_id, '_billing_first_name', true) . " " . get_post_meta($order_id, '_billing_last_name', true) . "\n";
+        $message_instituicao .= "Valor da doação: R$ " . number_format($donation_amount, 2, ',', '.') . "\n";
+        $message_instituicao .= "A doação pode demorar até 30 dias para ser paga.\n";
+        wp_mail($instituicao_email, 'Nova Doação Recebida', $message_instituicao);
+
+        // Enviar e-mail para o administrador
+        $admin_message = "Nova doação recebida!\n\n";
+        $admin_message .= "Cliente: " . get_post_meta($order_id, '_billing_first_name', true) . " " . get_post_meta($order_id, '_billing_last_name', true) . "\n";
+        $admin_message .= "Instituição: " . $instituicao_nome . "\n";
+        $admin_message .= "Valor da doação: R$ " . number_format($donation_amount, 2, ',', '.') . "\n";
+        $admin_message .= "Chave PIX da instituição: " . get_user_meta($instituicao_id, 'chave_pix', true) . "\n";
+        wp_mail(get_option('admin_email'), 'Nova Doação Recebida', $admin_message);
     }
 }
 add_action('woocommerce_checkout_update_order_meta', 'cid_save_donation_field');
@@ -224,15 +264,23 @@ function cid_doacoes_page() {
                     <th>Instituição</th>
                     <th>Valor da Doação</th>
                     <th>Status da Transação</th>
+                    <th>Nome do Doador</th>
+                    <th>E-mail do Doador</th>
+                    <th>E-mail da Instituição</th>
+                    <th>Chave PIX da Instituição</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($results as $row) : ?>
                     <tr>
                         <td><?php echo esc_html($row->ID); ?></td>
-                        <td><?php echo esc_html(get_post_meta($row->ID, '_instituicao', true)); ?></td>
+                                <td><?php echo esc_html(get_post_meta($row->ID, '_instituicao', true)); ?></td>
                         <td><?php echo esc_html(get_post_meta($row->ID, '_donation_amount', true)); ?></td>
                         <td><?php echo esc_html(get_post_meta($row->ID, '_order_status', true)); ?></td>
+                        <td><?php echo esc_html(get_post_meta($row->ID, '_billing_first_name', true) . ' ' . get_post_meta($row->ID, '_billing_last_name', true)); ?></td>
+                        <td><?php echo esc_html(get_post_meta($row->ID, '_billing_email', true)); ?></td>
+                        <td><?php echo esc_html(get_user_meta(get_post_meta($row->ID, '_instituicao', true), 'email', true)); ?></td>
+                        <td><?php echo esc_html(get_user_meta(get_post_meta($row->ID, '_instituicao', true), 'chave_pix', true)); ?></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -240,6 +288,43 @@ function cid_doacoes_page() {
     </div>
     <?php
 }
+
+// Alterar status da doação para "pago"
+function cid_change_donation_status($order_id) {
+    if (isset($_POST['change_donation_status']) && $_POST['change_donation_status'] === 'pago') {
+        // Atualizar o status da doação
+        update_post_meta($order_id, '_order_status', 'pago');
+
+        // Enviar e-mail para o cliente
+        $instituicao_id = get_post_meta($order_id, '_instituicao', true);
+        $instituicao_nome = get_userdata($instituicao_id)->display_name;
+        $instituicao_telefone = get_user_meta($instituicao_id, 'telefone', true);
+        $donation_amount = get_post_meta($order_id, '_donation_amount', true);
+
+        $client_email = get_post_meta($order_id, '_billing_email', true);
+        $client_message = "Sua doação de R$ " . number_format($donation_amount, 2, ',', '.') . " para a instituição " . $instituicao_nome . " foi paga.\n";
+        $client_message .= "Telefone da instituição: " . $instituicao_telefone . "\n";
+        $client_message .= "Se tiver dúvidas, entre em contato com a instituição.";
+        wp_mail($client_email, 'Confirmação de Pagamento da Doação', $client_message);
+
+        // Enviar e-mail para a instituição
+        $instituicao_email = get_userdata($instituicao_id)->user_email;
+        $instituicao_message = "Você recebeu um pagamento de doação!\n\n";
+        $instituicao_message .= "Cliente: " . get_post_meta($order_id, '_billing_first_name', true) . " " . get_post_meta($order_id, '_billing_last_name', true) . "\n";
+        $instituicao_message .= "Valor pago: R$ " . number_format($donation_amount, 2, ',', '.') . "\n";
+        $instituicao_message .= "Por favor, confira seu extrato bancário.";
+        wp_mail($instituicao_email, 'Pagamento de Doação Recebido', $instituicao_message);
+
+        // Enviar e-mail para o administrador
+        $admin_message = "Doação paga!\n\n";
+        $admin_message .= "Cliente: " . get_post_meta($order_id, '_billing_first_name', true) . " " . get_post_meta($order_id, '_billing_last_name', true) . "\n";
+        $admin_message .= "Instituição: " . $instituicao_nome . "\n";
+        $admin_message .= "Valor pago: R$ " . number_format($donation_amount, 2, ',', '.') . "\n";
+        $admin_message .= "Chave PIX da instituição: " . get_user_meta($instituicao_id, 'chave_pix', true) . "\n";
+        wp_mail(get_option('admin_email'), 'Doação Paga', $admin_message);
+    }
+}
+add_action('woocommerce_order_status_changed', 'cid_change_donation_status');
 
 // Adicionar configuração de porcentagem de doação
 function cid_add_settings_page() {
