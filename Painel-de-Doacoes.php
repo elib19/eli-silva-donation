@@ -129,13 +129,15 @@ function cid_process_instituicao_form() {
 add_action('init', 'cid_process_instituicao_form');
 
 // Adicionar campo de seleção de instituição no checkout do WooCommerce
-function cid_add_donation_field_to_checkout($checkout) {
+function cid_add_donation_field_to_checkout() {
+    echo '<div id="donation_field"><h3>' . __('Doação') . '</h3>';
     woocommerce_form_field('instituicao', array(
         'type' => 'select',
         'class' => array('form-row-wide'),
         'label' => __('Para qual instituição você deseja doar?'),
         'options' => cid_get_instituicoes()
-    ), $checkout->get_value('instituicao'));
+    ), '');
+    echo '</div>';
 }
 add_action('woocommerce_after_order_notes', 'cid_add_donation_field_to_checkout');
 
