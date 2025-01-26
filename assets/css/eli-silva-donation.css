@@ -1,38 +1,57 @@
-/* Estilos exclusivos para o plugin Eli Silva Donation */
-#donation_institution_field {
-    background-color: #f8f8f8;
-    padding: 15px;
+/* Estilos gerais para o plugin de doações */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+}
+
+.wrap {
+    background: #fff;
+    padding: 20px;
     border-radius: 5px;
-    margin-top: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-#donation_institution_field h3 {
-    font-size: 18px;
-    margin-bottom: 10px;
+h1, h2, h3 {
+    color: #0073aa;
 }
 
-#donation_institution_field select {
+input[type="text"],
+input[type="email"],
+textarea,
+select {
     width: 100%;
     padding: 10px;
-    font-size: 14px;
-    border-radius: 5px;
+    margin: 5px 0 15px;
     border: 1px solid #ccc;
+    border-radius: 4px;
 }
 
-#donation_institution_field .form-row-wide {
-    margin-bottom: 15px;
-}
-
-button[type="submit"] {
-    background-color: #0073e6; /* Cor de fundo do botão */
-    color: #fff; /* Cor do texto */
+input[type="submit"] {
+    background-color: #0073aa;
+    color: white;
     border: none;
-    padding: 10px 20px;
-    font-size: 16px;
-    border-radius: 5px;
+    padding: 10px 15px;
+    border-radius: 4px;
     cursor: pointer;
 }
 
-button[type="submit"]:hover {
-    background-color: #005bb5;
+input[type="submit"]:hover {
+    background-color: #005177;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #f1f1f1;
 }
