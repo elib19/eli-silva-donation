@@ -95,6 +95,10 @@ function cid_process_instituicao_form() {
             return;
         }
 
+        // Adicionar a função de assinante ao usuário
+        $user = new WP_User($user_id);
+        $user->set_role('subscriber');
+
         $wpdb->insert($table_name, array(
             'nome' => sanitize_text_field($_POST['nome']),
             'cnpj' => sanitize_text_field($_POST['cnpj']),
@@ -164,13 +168,18 @@ add_action('woocommerce_admin_order_data_after_billing_address', 'cid_display_do
 
 // Obter instituições para o campo de seleção
 function cid_get_instituicoes() {
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'instituicoes';
-    $results = $wpdb->get_results("SELECT id, nome FROM $table_name");
     $instituicoes = array();
     $instituicoes[0] = __('Selecione uma instituição'); // Adiciona uma opção padrão
-    foreach ($results as $row) {
-        $instituicoes[$row->id] = $row->nome;
+
+    // Recuperar usuários com a função de assinante
+    $args = array(
+        'role' => 'subscriber',
+        'fields' => array('ID', 'display_name')
+    );
+    $users = get_users($args);
+
+    foreach ($users as $user) {
+        $instituicoes[$user->ID] = $user->display_name; // Usar o nome de exibição do usuário
     }
     return $instituicoes;
 }
