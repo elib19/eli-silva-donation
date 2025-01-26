@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Painel de Doações
  * Plugin URI: https://juntoaqui.com.br
- * Description: Plugin para adicionar funcionalidades de doação ao WooCommerce, com seleção de instituição no checkout e envio de e-mail para o administrador.
+ * Description: Plugin para adicionar funcionalidades de doação ao WooCommerce, com seleção de instituição na página do produto e envio de e-mail para o administrador.
  * Version: 1.1.0
  * Author: Eli Silva
  * Author URI: https://juntoaqui.com.br
@@ -128,18 +128,35 @@ function cid_process_instituicao_form() {
 }
 add_action('init', 'cid_process_instituicao_form');
 
-// Adicionar campo de seleção de instituição no checkout do WooCommerce
-function cid_add_donation_field_to_checkout() {
-    echo '<div id="donation_field"><h3>' . __('Doação') . '</h3>';
-    woocommerce_form_field('instituicao', array(
-        'type' => 'select',
-        'class' => array('form-row-wide'),
-        'label' => __('Para qual instituição você deseja doar?'),
-        'options' => cid_get_instituicoes()
-    ), '');
-    echo '</div>';
+// Adicionar campo de seleção de instituição na página do produto
+function cid_add_donation_field_to_product() {
+    global $product;
+
+    // Verifica se o produto é do tipo "simples" ou "variável"
+    if ($product->is_type('simple') || $product->is_type('variable')) {
+        echo '<div class="product-donation-field">';
+        echo '<h3>' . __('Escolha uma instituição para doação') . '</h3>';
+        woocommerce_form_field('instituicao', array(
+            'type' => 'select',
+            'class' => array('form-row-wide'),
+            'label' => __('Para qual instituição você deseja doar?'),
+            'options' => cid_get_instituicoes(),
+            'required' => true, // Torna o campo obrigatório
+        ), '');
+        echo '</div>';
+    }
 }
-add_action('woocommerce_after_order_notes', 'cid_add_donation_field_to_checkout');
+add_action('woocommerce_before_add_to_cart_button', 'cid_add_donation_field_to_product');
+
+// Validar a seleção da instituição antes de adicionar ao carrinho
+function cid_validate_donation_field($passed, $product_id) {
+    if (isset($_POST['instituicao']) && empty($_POST['instituicao'])) {
+        wc_add_notice(__('Por favor, escolha uma instituição para doação.'), 'error');
+        return false;
+    }
+    return $passed;
+}
+add_filter('woocommerce_add_to_cart_validation', 'cid_validate_donation_field', 10, 2);
 
 // Salvar instituição escolhida no pedido
 function cid_save_donation_field($order_id) {
