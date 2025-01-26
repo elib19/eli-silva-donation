@@ -49,32 +49,56 @@ function cid_instituicao_form() {
     ob_start(); ?>
     <form action="" method="post">
         <!-- Campos do formulário -->
-        <input type="text" name="nome" placeholder="Nome da Instituição" required>
-        <input type="text" name="cnpj" placeholder="CNPJ" required>
-        <input type="text" name="telefone" placeholder="Telefone">
-        <input type="text" name="whatsapp" placeholder="WhatsApp">
-        <select name="tipo" required>
-            <option value="">Tipo de Instituição</option>
+        <label for="nome">Nome da Instituição</label><br>
+        <input type="text" name="nome" id="nome" required><br><br>
+
+        <label for="cnpj">CNPJ</label><br>
+        <input type="text" name="cnpj" id="cnpj" required><br><br>
+
+        <label for="telefone">Telefone</label><br>
+        <input type="text" name="telefone" id="telefone"><br><br>
+
+        <label for="whatsapp">WhatsApp</label><br>
+        <input type="text" name="whatsapp" id="whatsapp"><br><br>
+
+        <label for="tipo">Tipo de Instituição</label><br>
+        <select name="tipo" id="tipo" required>
+            <option value="">Selecione o tipo</option>
             <option value="hospital_cancer">Hospital de Câncer</option>
             <option value="igreja">Igreja</option>
             <option value="casa_recuperacao">Casa de Recuperação</option>
             <option value="instituicao_beneficiente">Instituição Beneficente</option>
-        </select>
-        <textarea name="endereco" placeholder="Endereço"></textarea>
-        <input type="text" name="bairro" placeholder="Bairro">
-        <input type="text" name="cidade" placeholder="Cidade">
-        <select name="estado" required>
-            <option value="">Estado</option>
+        </select><br><br>
+
+        <label for="endereco">Endereço</label><br>
+        <textarea name="endereco" id="endereco"></textarea><br><br>
+
+        <label for="bairro">Bairro</label><br>
+        <input type="text" name="bairro" id="bairro"><br><br>
+
+        <label for="cidade">Cidade</label><br>
+        <input type="text" name="cidade" id="cidade"><br><br>
+
+        <label for="estado">Estado</label><br>
+        <select name="estado" id="estado" required>
+            <option value="">Selecione o estado</option>
             <?php
             $estados = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
             foreach ($estados as $estado) {
                 echo "<option value='$estado'>$estado</option>";
             }
             ?>
-        </select>
-        <input type="text" name="cep" placeholder="CEP">
-        <input type="text" name="chave_pix" placeholder="Chave PIX">
-        <input type="email" name="email" placeholder="E-mail" required>
+        </select><br><br>
+
+        <label for="cep">CEP</label><br>
+        <input type="text" name="cep" id="cep"><br><br>
+
+        <label for="chave_pix">Chave PIX</label><br>
+        <input type="text" name="chave_pix" id="chave_pix"><br><br>
+
+        <label for="email">E-mail</label><br>
+        <input type="email" name="email" id="email" required><br><br>
+
         <input type="submit" name="submit_instituicao" value="Cadastrar Instituição">
     </form>
     <?php
@@ -153,7 +177,7 @@ function cid_add_donation_field_to_product() {
             'class' => array('form-row-wide'),
             'label' => __('Para qual instituição você deseja doar?'),
             'options' => cid_get_instituicoes(),
-            'required' => true, // Torna o campo obrigatório
+            'required' => false, // Torna o campo não obrigatório
         ), '');
         echo '</div>';
     }
@@ -163,8 +187,7 @@ add_action('woocommerce_before_add_to_cart_button', 'cid_add_donation_field_to_p
 // Validar a seleção da instituição antes de adicionar ao carrinho
 function cid_validate_donation_field($passed, $product_id) {
     if (isset($_POST['instituicao']) && empty($_POST['instituicao'])) {
-        wc_add_notice(__('Por favor, escolha uma instituição para doação.'), 'error');
-        return false;
+        // Removido para não exibir erro se a instituição não for selecionada
     }
     return $passed;
 }
@@ -274,7 +297,7 @@ function cid_doacoes_page() {
                 <?php foreach ($results as $row) : ?>
                     <tr>
                         <td><?php echo esc_html($row->ID); ?></td>
-                                <td><?php echo esc_html(get_post_meta($row->ID, '_instituicao', true)); ?></td>
+                        <td><?php echo esc_html(get_post_meta($row->ID, '_instituicao', true)); ?></td>
                         <td><?php echo esc_html(get_post_meta($row->ID, '_donation_amount', true)); ?></td>
                         <td><?php echo esc_html(get_post_meta($row->ID, '_order_status', true)); ?></td>
                         <td><?php echo esc_html(get_post_meta($row->ID, '_billing_first_name', true) . ' ' . get_post_meta($row->ID, '_billing_last_name', true)); ?></td>
