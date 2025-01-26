@@ -129,7 +129,7 @@ function cid_add_donation_field_to_checkout($checkout) {
     woocommerce_form_field('instituicao', array(
         'type' => 'select',
         'class' => array('form-row-wide'),
-        'label' => __('Escolha uma instituição para doação'),
+        'label' => __('Para qual instituição você deseja doar?'),
         'options' => cid_get_instituicoes()
     ), $checkout->get_value('instituicao'));
 }
@@ -139,15 +139,25 @@ add_action('woocommerce_after_order_notes', 'cid_add_donation_field_to_checkout'
 function cid_save_donation_field($order_id) {
     if (isset($_POST['instituicao']) && !empty($_POST['instituicao'])) {
         update_post_meta($order_id, '_instituicao', sanitize_text_field($_POST['instituicao']));
+        
+        // Calcular 30% do valor total da compra
+        $order = wc_get_order($order_id);
+        $total = $order->get_total();
+        $donation_amount = $total * 0.30; // 30% do total
+
+        // Salvar o valor da doação
+        update_post_meta($order_id, '_donation_amount', $donation_amount);
     }
 }
 add_action('woocommerce_checkout_update_order_meta', 'cid_save_donation_field');
 
-// Exibir instituição escolhida na administração do WooCommerce
+// Exibir instituição escolhida e valor da doação na administração do WooCommerce
 function cid_display_donation_in_order_admin($order) {
     $instituicao = get_post_meta($order->get_id(), '_instituicao', true);
+    $donation_amount = get_post_meta($order->get_id(), '_donation_amount', true);
     if ($instituicao) {
         echo '<p><strong>' . __('Instituição para Doação') . ':</strong> ' . esc_html($instituicao) . '</p>';
+        echo '<p><strong>' . __('Valor da Doação') . ':</strong> R$ ' . number_format($donation_amount, 2, ',', '.') . '</p>';
     }
 }
 add_action('woocommerce_admin_order_data_after_billing_address', 'cid_display_donation_in_order_admin');
@@ -193,7 +203,7 @@ function cid_doacoes_page() {
                     <tr>
                         <td><?php echo esc_html($row->ID); ?></td>
                         <td><?php echo esc_html(get_post_meta($row->ID, '_instituicao', true)); ?></td>
-                        <td><?php echo esc_html(get_post_meta($row->ID, '_order_total', true)); ?></td>
+                        <td><?php echo esc_html(get_post_meta($row->ID, '_donation_amount', true)); ?></td>
                         <td><?php echo esc_html(get_post_meta($row->ID, '_order_status', true)); ?></td>
                     </tr>
                 <?php endforeach; ?>
@@ -232,7 +242,7 @@ function cid_doacao_settings_page() {
 }
 
 function cid_doacao_percentual_callback() {
-    $percentual = get_option('doacao_percentual', 10);
+    $percentual = get_option('doacao_percentual', 30); // Alterado para 30%
     echo '<input type="number" name="doacao_percentual" value="' . esc_attr($percentual) . '" min="0" max="100" /> %';
 }
 
