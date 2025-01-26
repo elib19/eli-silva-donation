@@ -14,27 +14,30 @@ Este sistema foi desenvolvido para gerenciar doações no WordPress, integrado a
      - Nome e e-mail do doador.
      - Nome da instituição beneficiada.
      - Chave Pix da instituição.
+     - Valor da doação.
      - Status do pagamento: Pendente ou Pago.
    - Possibilidade de alterar o status de pagamento diretamente no painel.
 
 2. **Formulário de Cadastro de Instituições**  
    - Formulário gerado via shortcode para coletar dados das instituições:
      - Nome, CNPJ, telefone, WhatsApp.
-     - Tipo de instituição (hospital, igreja, entidade beneficente, etc.).
+     - Tipo de instituição (hospital, igreja, casa de recuperação, entidade beneficente, etc.).
      - Endereço completo (rua, número, bairro, cidade, estado, CEP).
    - Estado disponibilizado como campo `select` com todas as opções brasileiras.
+   - Campo para depoimento da instituição.
    - Instituições cadastradas aparecem automaticamente no painel administrativo.
 
 3. **Integração ao Carrinho do WooCommerce**  
    - Campo adicional no carrinho com um `select` para escolher a instituição que receberá a doação.
-   - Permite configurar percentuais de doação (padrão 30%, configurável entre 2% e 30%).
+   - Permite configurar percentuais de doação (padrão 30%, configurável entre 0% e 100%).
    - Percentual é aplicado automaticamente ao valor total dos produtos no carrinho.
+   - O campo de seleção da instituição é obrigatório apenas se houver pelo menos uma instituição cadastrada.
 
 4. **Notificações por E-mail**  
    - **Administrador**:
      - Recebe informações detalhadas sobre cada doação realizada.
    - **Instituição**:
-     - Notificação sobre a doação, incluindo prazo de pagamento (15 dias úteis).
+     - Notificação sobre a doação, incluindo prazo de pagamento (30 dias úteis).
    - **Cliente**:
      - Confirmação com informações da instituição beneficiada, incluindo contato.
    - **Após Confirmação de Pagamento**:
