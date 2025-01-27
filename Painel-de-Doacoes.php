@@ -43,7 +43,7 @@ function cid_create_tables() {
         chave_pix varchar(255),
         user_id bigint(20),
         depoimento text,
-        excluido tinyint(1) DEFAULT 0, // Novo campo para indicar se a instituição foi excluída
+        excluido tinyint(1) DEFAULT 0,
         PRIMARY KEY (id)
     ) $charset_collate;";
 
@@ -104,7 +104,7 @@ function cid_instituicao_form() {
             <option value="">Estado</option>
             <?php
             $estados = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
-            foreach ($ estados as $estado) {
+            foreach ($estados as $estado) {
                 echo "<option value='$estado'>$estado</option>";
             }
             ?>
@@ -185,7 +185,7 @@ function cid_process_instituicao_form() {
         update_user_meta($user_id, 'facebook', sanitize_text_field($_POST['facebook']));
         update_user_meta($user_id, 'instagram', sanitize_text_field($_POST['instagram']));
         update_user_meta($user_id, 'site_oficial', sanitize_text_field($_POST['site_oficial']));
-        update_user_meta($user_id, 'chave_pix', sanitize_text_field($_POST['chave_pix'])); // Salvar chave PIX
+        update_user_meta($user_id, 'chave_pix', sanitize_text_field($_POST['chave_pix']));
 
         $wpdb->insert($table_name, array(
             'nome' => sanitize_text_field($_POST['nome']),
@@ -194,7 +194,6 @@ function cid_process_instituicao_form() {
             'whatsapp' => sanitize_text_field($_POST['whatsapp']),
             'tipo' => sanitize_text_field($_POST['tipo']),
             'endereco' => sanitize_textarea_field($_POST['endereco']),
-            'bairro' => sanitize ```php
             'bairro' => sanitize_text_field($_POST['bairro']),
             'cidade' => sanitize_text_field($_POST['cidade']),
             'estado' => sanitize_text_field($_POST['estado']),
@@ -226,31 +225,31 @@ add_action('init', 'cid_process_instituicao_form');
 // Exibir instituições cadastradas
 function cid_exibir_instituicoes() {
     global $wpdb;
-    $instituicoes = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}instituicoes WHERE excluido = 0 LIMIT 16"); // Limitar a 16 instituições
+    $instituicoes = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}instituicoes WHERE excluido = 0 LIMIT 16");
 
     // Calcular o total de doações
     $total_doacoes = 0;
     foreach ($instituicoes as $instituicao) {
-        $total_doacoes += get_post_meta($instituicao->user_id, '_donation_amount', true); // Somar valores de doações
+        $total_doacoes += get_post_meta($instituicao->user_id, '_donation_amount', true);
     }
 
-    echo '<h2>Total de Doações: R$ ' . number_format($total_doacoes, 2, ',', '.') . '</h2>'; // Exibir total de doações
+    echo '<h2>Total de Doações: R$ ' . number_format($total_doacoes, 2, ',', '.') . '</h2>';
 
     if ($instituicoes) {
         echo '<div class="instituicoes" style="display: flex; flex-wrap: wrap;">';
         foreach ($instituicoes as $instituicao) {
-            echo '<div class="instituicao" style="flex: 1 0 21%; margin: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); padding: 10px;">'; // 4 colunas
-            echo '<img src="' . esc_url($instituicao->banner) . '" alt="Banner da Instituição" style="width: 100%; height: auto;">'; // Exibir banner
+            echo '<div class="instituicao" style="flex: 1 0 21%; margin: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); padding: 10px;">';
+            echo '<img src="' . esc_url($instituicao->banner) . '" alt="Banner da Instituição" style="width: 100%; height: auto;">';
             echo '<h3>' . esc_html($instituicao->nome) . '</h3>';
-            echo '<p><strong>CNPJ:</strong> ' . esc_html($instituicao->cnpj) . '</p>'; // Exibir CNPJ
-            echo '<p>' . esc_html($instituicao->atividades) . '</p>'; // Exibir atividades
+            echo '<p><strong>CNPJ:</strong> ' . esc_html($instituicao->cnpj) . '</p>';
+            echo '<p>' . esc_html($instituicao->atividades) . '</p>';
             echo '<p><strong>Facebook:</strong> <a href="' . esc_url($instituicao->facebook) . '">' . esc_html($instituicao->facebook) . '</a></p>';
             echo '<p><strong>Instagram:</strong> <a href="' . esc_url($instituicao->instagram) . '">' . esc_html($instituicao->instagram) . '</a></p>';
             echo '<p><strong>Site Oficial:</strong> <a href="' . esc_url($instituicao->site_oficial) . '">' . esc_html($instituicao->site_oficial) . '</a></p>';
             
             // Exibir chave PIX apenas para administradores ou a própria instituição
             if (current_user_can('administrator') || get_current_user_id() == $instituicao->user_id) {
-                echo '<p><strong>Chave PIX:</strong> ' . esc_html($instituicao->chave_pix) . '</p>'; // Exibir chave PIX
+                echo '<p><strong>Chave PIX:</strong> ' . esc_html($instituicao->chave_pix) . '</p>';
             }
             echo '</div>';
         }
@@ -262,7 +261,7 @@ add_shortcode('exibir_instituicoes', 'cid_exibir_instituicoes');
 // Exibir depoimentos
 function cid_exibir_depoimentos() {
     global $wpdb;
-    $instituicoes = $wpdb->get_results("SELECT user_id, nome, depoimento FROM {$wpdb->prefix}institu icoes");
+    $instituicoes = $wpdb->get_results("SELECT user_id, nome, depoimento FROM {$wpdb->prefix}instituicoes");
 
     if ($instituicoes) {
         echo '<div class="depoimentos">';
@@ -288,7 +287,7 @@ function cid_depoimento_form() {
     }
 
     $user_id = get_current_user_id();
-    $depoimento = get_user_meta($user_id, 'depoimento', true); // Recupera o depoimento existente, se houver
+    $depoimento = get_user_meta($user_id, 'depoimento', true);
 
     ob_start(); ?>
     <form action="" method="post">
@@ -305,7 +304,7 @@ add_shortcode('form_depoimento', 'cid_depoimento_form');
 function cid_process_depoimento_form() {
     if (isset($_POST['submit_depoimento']) && isset($_POST['cid_depoimento_nonce_field']) && wp_verify_nonce($_POST['cid_depoimento_nonce_field'], 'cid_depoimento_nonce')) {
         if (!is_user_logged_in()) {
-            return; // Se não estiver logado, não faz nada
+            return;
         }
 
         $user_id = get_current_user_id();
@@ -315,7 +314,7 @@ function cid_process_depoimento_form() {
         update_user_meta($user_id, 'depoimento', $depoimento);
 
         // Redirecionar ou mostrar uma mensagem de sucesso
-        wp_redirect(home_url('/?depoimento=sucesso')); // Redireciona para uma página de sucesso
+        wp_redirect(home_url('/?depoimento=sucesso'));
         exit;
     }
 }
@@ -325,21 +324,20 @@ add_action('init', 'cid_process_depoimento_form');
 function cid_add_donation_field_to_product() {
     global $product;
 
-    // Verifica se o produto é do tipo "simples" ou "variável"
     if ($product->is_type('simple') || $product->is_type('variable')) {
         echo '<div class="product-donation-field">';
         echo '<h3>' . __('Escolha uma instituição para doação') . '</h3>';
         
         // Verifica se há instituições cadastradas
         $instituicoes = cid_get_instituicoes();
-        $is_instituicoes_empty = count($instituicoes) <= 1; // Se não houver instituições cadastradas, a opção padrão é a única
+        $is_instituicoes_empty = count($instituicoes) <= 1;
 
         woocommerce_form_field('instituicao', array(
             'type' => 'select',
             'class' => array('form-row-wide'),
             'label' => __('Para qual instituição você deseja doar?'),
             'options' => $instituicoes,
-            'required' => !$is_instituicoes_empty, // Torna o campo obrigatório apenas se houver instituições cadastradas
+            'required' => !$is_instituicoes_empty,
         ), '');
         
         echo '</div>';
@@ -350,7 +348,7 @@ add_action('woocommerce_before_add_to_cart_button', 'cid_add_donation_field_to_p
 // Validar a seleção da instituição antes de adicionar ao carrinho
 function cid_validate_donation_field($passed, $product_id) {
     $instituicoes = cid_get_instituicoes();
-    $is_instituicoes_empty = count($instituicoes) <= 1; // Se não houver instituições cadastradas, a opção padrão é a única
+    $is_instituicoes_empty = count($instituicoes) <= 1;
 
     if (!$is_instituicoes_empty && isset($_POST['instituicao']) && empty($_POST['instituicao'])) {
         wc_add_notice(__('Por favor, escolha uma instituição para doação.'), 'error');
@@ -362,14 +360,14 @@ add_filter('woocommerce_add_to_cart_validation', 'cid_validate_donation_field', 
 
 // Salvar instituição escolhida no pedido
 function cid_save_donation_field($order_id) {
-    if (isset($_POST['instituicao']) && !empty ($_POST['instituicao'])) {
+    if (isset($_POST['instituicao']) && !empty($_POST['instituicao'])) {
         update_post_meta($order_id, '_instituicao', sanitize_text_field($_POST['instituicao']));
         
         // Calcular percentual de doação
-        $donation_percentage = get_option('doacao_percentual', 30); // Padrão 30%
+        $donation_percentage = get_option('doacao_percentual', 30);
         $order = wc_get_order($order_id);
         $total = $order->get_total();
-        $donation_amount = $total * ($donation_percentage / 100); // Percentual do total
+        $donation_amount = $total * ($donation_percentage / 100);
 
         // Salvar o valor da doação
         update_post_meta($order_id, '_donation_amount', $donation_amount);
@@ -418,7 +416,7 @@ add_action('woocommerce_admin_order_data_after_billing_address', 'cid_display_do
 // Obter instituições para o campo de seleção
 function cid_get_instituicoes() {
     $instituicoes = array();
-    $instituicoes[0] = __('Selecione uma instituição'); // Adiciona uma opção padrão
+    $instituicoes[0] = __('Selecione uma instituição');
 
     // Recuperar usuários com a função de assinante
     $args = array(
@@ -428,20 +426,20 @@ function cid_get_instituicoes() {
     $users = get_users($args);
 
     foreach ($users as $user) {
-        $instituicoes[$user->ID] = $user->display_name; // Usar o nome de exibição do usuário
+        $instituicoes[$user->ID] = $user->display_name;
     }
     return $instituicoes;
 }
 
 // Página de administração das doações
 function cid_add_donation_menu() {
-    add_menu_page('Do ações', 'Doações', 'manage_options', 'cid-doacoes', 'cid_doacoes_page');
+    add_menu_page('Doações', 'Doações', 'manage_options', 'cid-doacoes', 'cid_doacoes_page');
 }
 add_action('admin_menu', 'cid_add_donation_menu');
 
 function cid_doacoes_page() {
     global $wpdb;
-    $table_name = $wpdb->prefix . 'posts'; // Corrigido para a tabela de pedidos
+    $table_name = $wpdb->prefix . 'posts';
     $results = $wpdb->get_results("SELECT ID FROM $table_name WHERE post_type = 'shop_order'");
 
     ?>
@@ -457,7 +455,7 @@ function cid_doacoes_page() {
                     <th>Nome do Doador</th>
                     <th>E-mail do Doador</th>
                     <th>E-mail da Instituição</th>
-                    <th>Chave PIX</th> <!-- Nova coluna para Chave PIX -->
+                    <th>Chave PIX</th>
                 </tr>
             </thead>
             <tbody>
@@ -472,14 +470,11 @@ function cid_doacoes_page() {
                         <td><?php echo esc_html(get_user_meta(get_post_meta($row->ID, '_instituicao', true), 'email', true)); ?></td>
                         <td>
                             <?php
-                            // Obter a ID da instituição
                             $instituicao_id = get_post_meta($row->ID, '_instituicao', true);
-                            // Verificar se o usuário atual é o administrador ou a instituição correspondente
                             if (current_user_can('administrator') || get_current_user_id() == $instituicao_id) {
-                                // Exibir a chave PIX
                                 echo esc_html(get_user_meta($instituicao_id, 'chave_pix', true));
                             } else {
-                                echo 'Acesso restrito'; // Mensagem para usuários não autorizados
+                                echo 'Acesso restrito';
                             }
                             ?>
                         </td>
@@ -512,10 +507,8 @@ add_action('admin_notices', 'cid_admin_notice');
 // Alterar status da doação para "pago"
 function cid_change_donation_status($order_id) {
     if (isset($_POST['change_donation_status']) && $_POST['change_donation_status'] === 'pago') {
-                // Atualizar o status da doação
         update_post_meta($order_id, '_order_status', 'pago');
 
-        // Enviar e-mail para o cliente
         $instituicao_id = get_post_meta($order_id, '_instituicao', true);
         $instituicao_nome = get_userdata($instituicao_id)->display_name;
         $instituicao_telefone = get_user_meta($instituicao_id, 'telefone', true);
@@ -527,7 +520,6 @@ function cid_change_donation_status($order_id) {
         $client_message .= "Se tiver dúvidas, entre em contato com a instituição.";
         wp_mail($client_email, 'Confirmação de Pagamento da Doação', $client_message);
 
-        // Enviar e-mail para a instituição
         $instituicao_email = get_userdata($instituicao_id)->user_email;
         $instituicao_message = "Você recebeu um pagamento de doação!\n\n";
         $instituicao_message .= "Cliente: " . get_post_meta($order_id, '_billing_first_name', true) . " " . get_post_meta($order_id, '_billing_last_name', true) . "\n";
@@ -535,7 +527,6 @@ function cid_change_donation_status($order_id) {
         $instituicao_message .= "Por favor, confira seu extrato bancário.";
         wp_mail($instituicao_email, 'Pagamento de Doação Recebido', $instituicao_message);
 
-        // Enviar e-mail para o administrador
         $admin_message = "Doação paga!\n\n";
         $admin_message .= "Cliente: " . get_post_meta($order_id, '_billing_first_name', true) . " " . get_post_meta($order_id, '_billing_last_name', true) . "\n";
         $admin_message .= "Instituição: " . $instituicao_nome . "\n";
@@ -574,7 +565,7 @@ function cid_doacao_settings_page() {
 }
 
 function cid_doacao_percentual_callback() {
-    $percentual = get_option('doacao_percentual', 30); // Padrão 30%
+    $percentual = get_option('doacao_percentual', 30);
     echo '<input type="number" name="doacao_percentual" value="' . esc_attr($percentual) . '" min="0" max="100" /> %';
 }
 
