@@ -40,9 +40,10 @@ function cid_create_tables() {
         facebook varchar(255),
         instagram varchar(255),
         site_oficial varchar(255),
-        chave_pix varchar(255),  // Novo campo para chave PIX
+        chave_pix varchar(255),
         user_id bigint(20),
         depoimento text,
+        excluido tinyint(1) DEFAULT 0, // Novo campo para indicar se a instituição foi excluída
         PRIMARY KEY (id)
     ) $charset_collate;";
 
@@ -103,7 +104,7 @@ function cid_instituicao_form() {
             <option value="">Estado</option>
             <?php
             $estados = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
-            foreach ($estados as $estado) {
+            foreach ($ estados as $estado) {
                 echo "<option value='$estado'>$estado</option>";
             }
             ?>
@@ -193,6 +194,7 @@ function cid_process_instituicao_form() {
             'whatsapp' => sanitize_text_field($_POST['whatsapp']),
             'tipo' => sanitize_text_field($_POST['tipo']),
             'endereco' => sanitize_textarea_field($_POST['endereco']),
+            'bairro' => sanitize ```php
             'bairro' => sanitize_text_field($_POST['bairro']),
             'cidade' => sanitize_text_field($_POST['cidade']),
             'estado' => sanitize_text_field($_POST['estado']),
@@ -203,7 +205,7 @@ function cid_process_instituicao_form() {
             'facebook' => sanitize_text_field($_POST['facebook']),
             'instagram' => sanitize_text_field($_POST['instagram']),
             'site_oficial' => sanitize_text_field($_POST['site_oficial']),
-            'chave_pix' => sanitize_text_field($_POST['chave_pix']), // Salvar chave PIX
+            'chave_pix' => sanitize_text_field($_POST['chave_pix']),
             'user_id' => $user_id
         ));
 
@@ -224,7 +226,7 @@ add_action('init', 'cid_process_instituicao_form');
 // Exibir instituições cadastradas
 function cid_exibir_instituicoes() {
     global $wpdb;
-    $instituicoes = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}instituicoes LIMIT 15"); // Limitar a 15 instituições
+    $instituicoes = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}instituicoes WHERE excluido = 0 LIMIT 16"); // Limitar a 16 instituições
 
     // Calcular o total de doações
     $total_doacoes = 0;
@@ -260,7 +262,7 @@ add_shortcode('exibir_instituicoes', 'cid_exibir_instituicoes');
 // Exibir depoimentos
 function cid_exibir_depoimentos() {
     global $wpdb;
-    $instituicoes = $wpdb->get_results("SELECT user_id, nome, depoimento FROM {$wpdb->prefix}instituicoes");
+    $instituicoes = $wpdb->get_results("SELECT user_id, nome, depoimento FROM {$wpdb->prefix}institu icoes");
 
     if ($instituicoes) {
         echo '<div class="depoimentos">';
@@ -360,7 +362,7 @@ add_filter('woocommerce_add_to_cart_validation', 'cid_validate_donation_field', 
 
 // Salvar instituição escolhida no pedido
 function cid_save_donation_field($order_id) {
-    if (isset($_POST['instituicao']) && !empty($_POST['instituicao'])) {
+    if (isset($_POST['instituicao']) && !empty ($_POST['instituicao'])) {
         update_post_meta($order_id, '_instituicao', sanitize_text_field($_POST['instituicao']));
         
         // Calcular percentual de doação
@@ -433,7 +435,7 @@ function cid_get_instituicoes() {
 
 // Página de administração das doações
 function cid_add_donation_menu() {
-    add_menu_page('Doações', 'Doações', 'manage_options', 'cid-doacoes', 'cid_doacoes_page');
+    add_menu_page('Do ações', 'Doações', 'manage_options', 'cid-doacoes', 'cid_doacoes_page');
 }
 add_action('admin_menu', 'cid_add_donation_menu');
 
@@ -510,7 +512,7 @@ add_action('admin_notices', 'cid_admin_notice');
 // Alterar status da doação para "pago"
 function cid_change_donation_status($order_id) {
     if (isset($_POST['change_donation_status']) && $_POST['change_donation_status'] === 'pago') {
-        // Atualizar o status da doação
+                // Atualizar o status da doação
         update_post_meta($order_id, '_order_status', 'pago');
 
         // Enviar e-mail para o cliente
@@ -572,7 +574,7 @@ function cid_doacao_settings_page() {
 }
 
 function cid_doacao_percentual_callback() {
-    $percentual = get_option('doacao_percentual', 30); // Alterado para 30%
+    $percentual = get_option('doacao_percentual', 30); // Padrão 30%
     echo '<input type="number" name="doacao_percentual" value="' . esc_attr($percentual) . '" min="0" max="100" /> %';
 }
 
