@@ -233,19 +233,21 @@ function cid_exibir_instituicoes() {
         $total_doacoes += get_post_meta($instituicao->user_id, '_donation_amount', true);
     }
 
+    ob_start(); // Iniciar o buffer de saída
+
     echo '<h2>Total de Doações: R$ ' . number_format($total_doacoes, 2, ',', '.') . '</h2>';
 
     if ($instituicoes) {
-        echo '<div class="instituicoes" style="display: flex; flex-wrap: wrap;">';
+        echo '<div class="instituicoes-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">';
         foreach ($instituicoes as $instituicao) {
-            echo '<div class="instituicao" style="flex: 1 0 21%; margin: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); padding: 10px;">';
-            echo '<img src="' . esc_url($instituicao->banner) . '" alt="Banner da Instituição" style="width: 100%; height: auto;">';
-            echo '<h3>' . esc_html($instituicao->nome) . '</h3>';
+            echo '<div class="instituicao" style="border: 1px solid #ddd; border-radius: 5px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">';
+            echo '<img src="' . esc_url($instituicao->banner) . '" alt="Banner da Instituição" style="width: 100%; height: auto; border-radius: 5px;">';
+            echo '<h3 style="margin: 10px 0;">' . esc_html($instituicao->nome) . '</h3>';
             echo '<p><strong>CNPJ:</strong> ' . esc_html($instituicao->cnpj) . '</p>';
             echo '<p>' . esc_html($instituicao->atividades) . '</p>';
-            echo '<p><strong>Facebook:</strong> <a href="' . esc_url($instituicao->facebook) . '">' . esc_html($instituicao->facebook) . '</a></p>';
-            echo '<p><strong>Instagram:</strong> <a href="' . esc_url($instituicao->instagram) . '">' . esc_html($instituicao->instagram) . '</a></p>';
-            echo '<p><strong>Site Oficial:</strong> <a href="' . esc_url($instituicao->site_oficial) . '">' . esc_html($instituicao->site_oficial) . '</a></p>';
+            echo '<p><strong>Facebook:</strong> <a href="' . esc_url($instituicao->facebook) . '" target="_blank">' . esc_html($instituicao->facebook) . '</a></p>';
+            echo '<p><strong>Instagram:</strong> <a href="' . esc_url($instituicao->instagram) . '" target="_blank">' . esc_html($instituicao->instagram) . '</a></p>';
+            echo '<p><strong>Site Oficial:</strong> <a href="' . esc_url($instituicao->site_oficial) . '" target="_blank">' . esc_html($instituicao->site_oficial) . '</a></p>';
             
             // Exibir chave PIX apenas para administradores ou a própria instituição
             if (current_user_can('administrator') || get_current_user_id() == $instituicao->user_id) {
@@ -253,8 +255,12 @@ function cid_exibir_instituicoes() {
             }
             echo '</div>';
         }
-        echo '</div>';
+        echo '</div>'; // Fechar a div da grid
+    } else {
+        echo '<p>Nenhuma instituição cadastrada.</p>';
     }
+
+    return ob_get_clean(); // Retornar o conteúdo do buffer
 }
 add_shortcode('exibir_instituicoes', 'cid_exibir_instituicoes');
 
@@ -524,6 +530,7 @@ function cid_change_donation_status($order_id) {
         $instituicao_message = "Você recebeu um pagamento de doação!\n\n";
         $instituicao_message .= "Cliente: " . get_post_meta($order_id, '_billing_first_name', true) . " " . get_post_meta($order_id, '_billing_last_name', true) . "\n";
         $instituicao_message .= "Valor pago: R$ " . number_format($donation_amount, 2, ',', '.') . "\n";
+        $instituicao_message ```php
         $instituicao_message .= "Por favor, confira seu extrato bancário.";
         wp_mail($instituicao_email, 'Pagamento de Doação Recebido', $instituicao_message);
 
