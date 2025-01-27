@@ -40,7 +40,7 @@ function cid_create_tables() {
         facebook varchar(255),
         instagram varchar(255),
         site_oficial varchar(255),
-        chave_pix varchar(255),  // Novo campo para chave PIX
+        chave_pix varchar(255),
         user_id bigint(20),
         depoimento text,
         PRIMARY KEY (id)
@@ -224,25 +224,33 @@ add_action('init', 'cid_process_instituicao_form');
 // Exibir instituições cadastradas
 function cid_exibir_instituicoes() {
     global $wpdb;
-    $instituicoes = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}instituicoes");
+    $instituicoes = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}instituicoes WHERE user_id IN (SELECT ID FROM {$wpdb->prefix}users WHERE user_status = 0)");
 
     if ($instituicoes) {
-        echo '<div class="instituicoes">';
+        echo '<div class="instituicoes" style="display: flex; flex-wrap: wrap;">';
         foreach ($instituicoes as $instituicao) {
-            echo '<div class="instituicao">';
+            echo '<div class="instituicao" style="flex: 1 0 30%; margin: 10px;">'; // Colunas de 3
             echo '<h3>' . esc_html($instituicao->nome) . '</h3>';
             echo '<p>' . esc_html($instituicao->atividades) . '</p>'; // Exibir atividades
-            echo '<p><strong>Chave PIX:</strong> ' . esc_html($instituicao->chave_pix) . '</p>'; // Exibir chave PIX
+            // Removido a exibição da chave PIX
             echo '<p><strong>Facebook:</strong> <a href="' . esc_url($instituicao->facebook) . '">' . esc_html($instituicao->facebook) . '</a></p>';
             echo '<p><strong>Instagram:</strong> <a href="' . esc_url($instituicao->instagram) . '">' . esc_html($instituicao->instagram) . '</a></p>';
             echo '<p><strong>Site Oficial:</strong> <a href="' . esc_url($instituicao->site_oficial) . '">' . esc_html($instituicao->site_oficial) . '</a></p>';
             echo '<img src="' . esc_url($instituicao->banner) . '" alt="Banner da Instituição" style="max-width: 100%; height: auto;">'; // Exibir banner
+            echo '<p><strong>Valor doado:</strong> R$ ' . number_format(cid_get_total_donations($instituicao->user_id), 2, ',', '.') . '</p>'; // Exibir valor doado
             echo '</div>';
         }
         echo '</div>';
     }
 }
 add_shortcode('exibir_instituicoes', 'cid_exibir_instituicoes');
+
+// Função para obter o total de doações de uma instituição
+function cid_get_total_donations($user_id) {
+    global $wpdb;
+    $total = $wpdb->get_var($wpdb->prepare("SELECT SUM(meta_value) FROM {$wpdb->prefix}postmeta WHERE meta_key = '_donation_amount' AND post_id IN (SELECT ID FROM {$wpdb->prefix}posts WHERE post_type = 'shop_order' AND post_status = 'wc-completed') AND post_id IN (SELECT order_id FROM {$wpdb->prefix}postmeta WHERE meta_key = '_instituicao' AND meta_value = %d)", $user_id));
+    return $total ? $total : 0;
+}
 
 // Exibir depoimentos
 function cid_exibir_depoimentos() {
@@ -408,7 +416,8 @@ function cid_get_instituicoes() {
     // Recuperar usuários com a função de assinante
     $args = array(
         'role' => 'subscriber',
-        'fields' => array('ID', 'display_name')
+        'fields' => array('ID', 'display_name'),
+        'exclude' => array(get_option('doacao_excluded_users')) // Excluir usuários excluídos
     );
     $users = get_users($args);
 
@@ -475,6 +484,7 @@ function cid_doacoes_page() {
     </div>
     <?php
 }
+
 // Adicionar aviso de uso do plugin no painel administrativo
 function cid_admin_notice() {
     ?>
@@ -492,6 +502,7 @@ function cid_admin_notice() {
     <?php
 }
 add_action('admin_notices', 'cid_admin_notice');
+
 // Alterar status da doação para "pago"
 function cid_change_donation_status($order_id) {
     if (isset($_POST['change_donation_status']) && $_POST['change_donation_status'] === 'pago') {
@@ -567,5 +578,5 @@ add_action('wp_enqueue_scripts', function() {
     wp_enqueue_style('meu-estilo', plugin_dir_url(__FILE__) .'assets/css/eli-silva-donation.css');
     
     // Enqueue seu JS
-    wp_enqueue_script('meu-script', plugin_dir_url(__FILE__) .'assets/js/eli-silva-donation.js', [], false, true);
+    wp _enqueue_script('meu-script', plugin_dir_url(__FILE__) .'assets/js/eli-silva-donation.js', [], false, true);
 });
