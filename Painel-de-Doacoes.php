@@ -475,6 +475,23 @@ function cid_doacoes_page() {
     </div>
     <?php
 }
+// Adicionar aviso de uso do plugin no painel administrativo
+function cid_admin_notice() {
+    ?>
+    <div class="notice notice-info is-dismissible">
+        <h2><?php _e('Bem-vindo ao Painel de Doações!', 'Painel de Doações'); ?></h2>
+        <p><?php _e('Para começar a usar o plugin, siga as instruções abaixo:', 'Painel de Doações'); ?></p>
+        <ul>
+            <li><?php _e('Crie uma nova página para exibir o formulário de cadastro das instituições e adicione o shortcode: <code>[form_doacao]</code>', 'Painel de Doações'); ?></li>
+            <li><?php _e('Crie uma nova página para exibir as instituições cadastradas e adicione o shortcode: <code>[exibir_instituicoes]</code>', 'Painel de Doações'); ?></li>
+            <li><?php _e('Crie uma nova página para exibir os depoimentos e adicione o shortcode: <code>[exibir_depoimentos]</code>', 'Painel de Doações'); ?></li>
+            <li><?php _e('Crie uma nova página para as instituições adicionarem os depoimentos e adicione o shortcode: <code>[form_depoimento]</code>', 'Painel de Doações'); ?></li>
+        </ul>
+        <p><?php _e('Para mais informações, visite nosso site: <a href="https://juntoaqui.com.br" target="_blank">juntoaqui.com.br</a>', 'Painel de Doações'); ?></p>
+    </div>
+    <?php
+}
+add_action('admin_notices', 'cid_admin_notice');
 // Alterar status da doação para "pago"
 function cid_change_donation_status($order_id) {
     if (isset($_POST['change_donation_status']) && $_POST['change_donation_status'] === 'pago') {
