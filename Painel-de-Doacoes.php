@@ -40,6 +40,7 @@ function cid_create_tables() {
         facebook varchar(255),
         instagram varchar(255),
         site_oficial varchar(255),
+        chave_pix varchar(255),  // Adicionado campo chave_pix
         user_id bigint(20),
         depoimento text,
         PRIMARY KEY (id)
@@ -125,12 +126,16 @@ function cid_instituicao_form() {
         <input type="text" name="facebook" placeholder="URL do Facebook">
         <br>
 
-        <label for="instagram">URL do Instagram</label>
+        <label for="instagram">URL do Instagram</label><br>
         <input type="text" name="instagram" placeholder="URL do Instagram">
         <br>
 
         <label for="site_oficial">Site Oficial (opcional)</label><br>
         <input type="text" name="site_oficial" placeholder="Site Oficial (opcional)">
+        <br>
+
+        <label for="chave_pix">Chave PIX</label><br>
+        <input type="text" name="chave_pix" placeholder="Chave PIX" required>
         <br>
 
         <input type="submit" name="submit_instituicao" value="Cadastrar Instituição">
@@ -179,6 +184,7 @@ function cid_process_instituicao_form() {
         update_user_meta($user_id, 'facebook', sanitize_text_field($_POST['facebook']));
         update_user_meta($user_id, 'instagram', sanitize_text_field($_POST['instagram']));
         update_user_meta($user_id, 'site_oficial', sanitize_text_field($_POST['site_oficial']));
+        update_user_meta($user_id, 'chave_pix', sanitize_text_field($_POST['chave_pix'])); // Armazenar chave PIX
 
         $wpdb->insert($table_name, array(
             'nome' => sanitize_text_field($_POST['nome']),
@@ -197,6 +203,7 @@ function cid_process_instituicao_form() {
             'facebook' => sanitize_text_field($_POST['facebook']),
             'instagram' => sanitize_text_field($_POST['instagram']),
             'site_oficial' => sanitize_text_field($_POST['site_oficial']),
+            'chave_pix' => sanitize_text_field($_POST['chave_pix']), // Armazenar chave PIX
             'user_id' => $user_id
         ));
 
@@ -228,6 +235,7 @@ function cid_exibir_instituicoes() {
             echo '<p><strong>Facebook:</strong> <a href="' . esc_url($instituicao->facebook) . '">' . esc_html($instituicao->facebook) . '</a></p>';
             echo '<p><strong>Instagram:</strong> <a href="' . esc_url($instituicao->instagram) . '">' . esc_html($instituicao->instagram) . '</a></p>';
             echo '<p><strong>Site Oficial:</strong> <a href="' . esc_url($instituicao->site_oficial) . '">' . esc_html($instituicao->site_oficial) . '</a></p>';
+            echo '<p><strong>Chave PIX:</strong> ' . esc_html($instituicao->chave_pix) . '</p>'; // Exibir chave PIX
             echo '<img src="' . esc_url($instituicao->banner) . '" alt="Banner da Instituição" style="max-width: 100%; height: auto;">'; // Exibir banner
             echo '</div>';
         }
@@ -388,6 +396,10 @@ function cid_display_donation_in_order_admin($order) {
     if ($instituicao) {
         echo '<p><strong>' . __('Instituição para Doação') . ':</strong> ' . esc_html($instituicao) . '</p>';
         echo '<p><strong>' . __('Valor da Doação') . ':</strong> R$ ' . number_format($donation_amount, 2, ',', '.') . '</p>';
+        
+        // Exibir chave PIX
+        $chave_pix = get_user_meta(get_post_meta($order->get_id(), '_instituicao', true), 'chave_pix', true);
+        echo '<p><strong>' . __('Chave PIX') . ':</strong> ' . esc_html($chave_pix) . '</p>';
     }
 }
 add_action('woocommerce_admin_order_data_after_billing_address', 'cid_display_donation_in_order_admin');
@@ -434,6 +446,8 @@ function cid_doacoes_page() {
                     <th>Nome do Doador</th>
                     <th>E-mail do Doador</th>
                     <th>E-mail da Instituição</th>
+                    <th>Chave PIX</th> <!-- Coluna para Chave PIX -->
+                    <th>Ações</th> <!-- Coluna para ações -->
                 </tr>
             </thead>
             <tbody>
@@ -446,6 +460,13 @@ function cid_doacoes_page() {
                         <td><?php echo esc_html(get_post_meta($row->ID, '_billing_first_name', true) . ' ' . get_post_meta($row->ID, '_billing_last_name', true)); ?></td>
                         <td><?php echo esc_html(get_post_meta($row->ID, '_billing_email', true)); ?></td>
                         <td><?php echo esc_html(get_user_meta(get_post_meta($row->ID, '_instituicao', true), 'email', true)); ?></td>
+                        <td><?php echo esc_html(get_user_meta(get_post_meta($row->ID, '_instituicao', true), 'chave_pix', true)); ?></td> <!-- Exibir Chave PIX -->
+                        <td>
+                            <form method="post" action="">
+                                <input type="hidden" name="order_id" value="<?php echo esc_attr($row->ID); ?>">
+                                <input type="submit" name="delete_donation" value="Excluir Doação" onclick="return confirm('Tem certeza que deseja excluir esta doação?');">
+                            </form>
+                        </td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -453,6 +474,23 @@ function cid_doacoes_page() {
     </div>
     <?php
 }
+
+// Processar exclusão da doação
+function cid_process_donation_deletion() {
+    if (isset($_POST['delete_donation']) && isset($_POST['order_id'])) {
+        $order_id = intval($_POST['order_id']);
+        // Aqui você pode adicionar lógica para verificar se a doação foi paga antes de permitir a exclusão
+        // Exemplo: Verificar o status da doação
+        $status = get_post_meta($order_id, '_order_status', true);
+        if ($status === 'pago') {
+            // Excluir a doação
+            wp_delete_post($order_id, true); // Excluir permanentemente
+            // Enviar e-mail de confirmação ou notificação
+            wp_mail(get_option('admin_email'), 'Doação Excluída', 'A doação com ID ' . $order_id . ' foi excluída.');
+        }
+    }
+}
+add_action('init', 'cid_process_donation_deletion');
 
 // Alterar status da doação para "pago"
 function cid_change_donation_status($order_id) {
@@ -529,5 +567,4 @@ add_action('wp_enqueue_scripts', function() {
     wp_enqueue_style('meu-estilo', plugin_dir_url(__FILE__) .'assets/css/eli-silva-donation.css');
     
     // Enqueue seu JS
-    wp_enqueue_script('meu-script', plugin_dir_url(__FILE__) .'assets/js/eli-silva-donation.js', [], false, true);
-});
+    wp_enqueue_script('meu-script', plugin_dir_url(__FILE
