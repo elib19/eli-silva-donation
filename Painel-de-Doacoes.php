@@ -55,27 +55,27 @@ function cid_instituicao_form() {
     <form action="" method="post">
         <?php wp_nonce_field('cid_instituicao_form_nonce', 'cid_instituicao_form_nonce_field'); ?>
         
-        <label for="nome">Nome da Instituição</label>
+        <label for="nome">Nome da Instituição</label><br>
         <input type="text" name="nome" placeholder="Nome da Instituição" required>
         <br>
 
-        <label for="cnpj">CNPJ</label>
+        <label for="cnpj">CNPJ</label><br>
         <input type="text" name="cnpj" placeholder="CNPJ" required>
         <br>
 
-        <label for="atividades">Descreva suas atividades</label>
+        <label for="atividades">Descreva suas atividades</label><br>
         <textarea name="atividades" placeholder="Descreva suas atividades" required></textarea>
         <br>
 
-        <label for="telefone">Telefone</label>
+        <label for="telefone">Telefone</label><br>
         <input type="text" name="telefone" placeholder="Telefone">
         <br>
 
-        <label for="whatsapp">WhatsApp</label>
+        <label for="whatsapp">WhatsApp</label><br>
         <input type="text" name="whatsapp" placeholder="WhatsApp">
         <br>
 
-        <label for="tipo">Tipo de Instituição</label>
+        <label for="tipo">Tipo de Instituição</label><br>
         <select name="tipo" required>
             <option value="">Tipo de Instituição</option>
             <option value="hospital_cancer">Hospital de Câncer</option>
@@ -85,19 +85,19 @@ function cid_instituicao_form() {
         </select>
         <br>
 
-        <label for="endereco">Endereço</label>
+        <label for="endereco">Endereço</label><br>
         <textarea name="endereco" placeholder="Endereço"></textarea>
         <br>
 
-        <label for="bairro">Bairro</label>
+        <label for="bairro">Bairro</label><br>
         <input type="text" name="bairro" placeholder="Bairro">
         <br>
 
-        <label for="cidade">Cidade</label>
+        <label for="cidade">Cidade</label><br>
         <input type="text" name="cidade" placeholder="Cidade">
         <br>
 
-        <label for="estado">Estado</label>
+        <label for="estado">Estado</label><br>
         <select name="estado" required>
             <option value="">Estado</option>
             <?php
@@ -109,19 +109,19 @@ function cid_instituicao_form() {
         </select>
         <br>
 
-        <label for="cep">CEP</label>
+        <label for="cep">CEP</label><br>
         <input type="text" name="cep" placeholder="CEP">
         <br>
 
-        <label for="email">E-mail</label>
+        <label for="email">E-mail</label><br>
         <input type="email" name="email" placeholder="E-mail" required>
         <br>
 
-        <label for="banner">URL do Banner</label>
+        <label for="banner">URL do Banner</label><br>
         <input type="text" name="banner" placeholder="URL do Banner">
         <br>
 
-        <label for="facebook">URL do Facebook</label>
+        <label for="facebook">URL do Facebook</label><br>
         <input type="text" name="facebook" placeholder="URL do Facebook">
         <br>
 
@@ -129,7 +129,7 @@ function cid_instituicao_form() {
         <input type="text" name="instagram" placeholder="URL do Instagram">
         <br>
 
-        <label for="site_oficial">Site Oficial (opcional)</label>
+        <label for="site_oficial">Site Oficial (opcional)</label><br>
         <input type="text" name="site_oficial" placeholder="Site Oficial (opcional)">
         <br>
 
