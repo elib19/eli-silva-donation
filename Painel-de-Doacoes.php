@@ -224,19 +224,32 @@ add_action('init', 'cid_process_instituicao_form');
 // Exibir instituições cadastradas
 function cid_exibir_instituicoes() {
     global $wpdb;
-    $instituicoes = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}instituicoes");
+    $instituicoes = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}instituicoes LIMIT 15"); // Limitar a 15 instituições
+
+    // Calcular o total de doações
+    $total_doacoes = 0;
+    foreach ($instituicoes as $instituicao) {
+        $total_doacoes += get_post_meta($instituicao->user_id, '_donation_amount', true); // Somar valores de doações
+    }
+
+    echo '<h2>Total de Doações: R$ ' . number_format($total_doacoes, 2, ',', '.') . '</h2>'; // Exibir total de doações
 
     if ($instituicoes) {
-        echo '<div class="instituicoes">';
+        echo '<div class="instituicoes" style="display: flex; flex-wrap: wrap;">';
         foreach ($instituicoes as $instituicao) {
-            echo '<div class="instituicao">';
+            echo '<div class="instituicao" style="flex: 1 0 21%; margin: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); padding: 10px;">'; // 4 colunas
+            echo '<img src="' . esc_url($instituicao->banner) . '" alt="Banner da Instituição" style="width: 100%; height: auto;">'; // Exibir banner
             echo '<h3>' . esc_html($instituicao->nome) . '</h3>';
+            echo '<p><strong>CNPJ:</strong> ' . esc_html($instituicao->cnpj) . '</p>'; // Exibir CNPJ
             echo '<p>' . esc_html($instituicao->atividades) . '</p>'; // Exibir atividades
-            echo '<p><strong>Chave PIX:</strong> ' . esc_html($instituicao->chave_pix) . '</p>'; // Exibir chave PIX
             echo '<p><strong>Facebook:</strong> <a href="' . esc_url($instituicao->facebook) . '">' . esc_html($instituicao->facebook) . '</a></p>';
             echo '<p><strong>Instagram:</strong> <a href="' . esc_url($instituicao->instagram) . '">' . esc_html($instituicao->instagram) . '</a></p>';
             echo '<p><strong>Site Oficial:</strong> <a href="' . esc_url($instituicao->site_oficial) . '">' . esc_html($instituicao->site_oficial) . '</a></p>';
-            echo '<img src="' . esc_url($instituicao->banner) . '" alt="Banner da Instituição" style="max-width: 100%; height: auto;">'; // Exibir banner
+            
+            // Exibir chave PIX apenas para administradores ou a própria instituição
+            if (current_user_can('administrator') || get_current_user_id() == $instituicao->user_id) {
+                echo '<p><strong>Chave PIX:</strong> ' . esc_html($instituicao->chave_pix) . '</p>'; // Exibir chave PIX
+            }
             echo '</div>';
         }
         echo '</div>';
@@ -475,6 +488,7 @@ function cid_doacoes_page() {
     </div>
     <?php
 }
+
 // Adicionar aviso de uso do plugin no painel administrativo
 function cid_admin_notice() {
     ?>
@@ -492,6 +506,7 @@ function cid_admin_notice() {
     <?php
 }
 add_action('admin_notices', 'cid_admin_notice');
+
 // Alterar status da doação para "pago"
 function cid_change_donation_status($order_id) {
     if (isset($_POST['change_donation_status']) && $_POST['change_donation_status'] === 'pago') {
