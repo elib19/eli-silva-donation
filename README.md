@@ -1,3 +1,6 @@
+
+---
+
 ### README - Sistema de Gerenciamento de Doações no WordPress com Integração ao WooCommerce
 
 ---
@@ -13,7 +16,6 @@ Este sistema foi desenvolvido para gerenciar doações no WordPress, integrado a
    - Exibe as doações realizadas com informações detalhadas:
      - Nome e e-mail do doador.
      - Nome da instituição beneficiada.
-     - Chave Pix da instituição.
      - Valor da doação.
      - Status do pagamento: Pendente ou Pago.
    - Possibilidade de alterar o status de pagamento diretamente no painel.
@@ -25,6 +27,8 @@ Este sistema foi desenvolvido para gerenciar doações no WordPress, integrado a
      - Endereço completo (rua, número, bairro, cidade, estado, CEP).
    - Estado disponibilizado como campo `select` com todas as opções brasileiras.
    - Campo para depoimento da instituição.
+   - Campo para descrever as atividades da instituição.
+   - Campos para URL do banner, Facebook, Instagram e site oficial (opcional).
    - Instituições cadastradas aparecem automaticamente no painel administrativo.
 
 3. **Formulário para Cadastrar ou Editar Depoimentos**  
@@ -58,6 +62,7 @@ Este sistema foi desenvolvido para gerenciar doações no WordPress, integrado a
 - **[form_doacao]**: Exibe o formulário de cadastro de instituições.
 - **[form_depoimento]**: Exibe o formulário para que as instituições logadas possam cadastrar ou editar seus depoimentos.
 - **[exibir_depoimentos]**: Exibe os depoimentos das instituições cadastradas.
+- **[exibir_instituicoes]**: Exibe uma lista das instituições cadastradas com suas informações e links para suas páginas.
 
 ---
 
@@ -69,7 +74,8 @@ Este sistema foi desenvolvido para gerenciar doações no WordPress, integrado a
 3. Use o shortcode `[form_doacao]` para inserir o formulário de cadastro em qualquer página.
 4. Use o shortcode `[form_depoimento]` para permitir que as instituições logadas adicionem ou editem seus depoimentos.
 5. Use o shortcode `[exibir_depoimentos]` para mostrar os depoimentos cadastrados em qualquer página ou post.
-6. Configure as opções no painel de administração de doações.
+6. Use o shortcode `[exibir_instituicoes]` para mostrar as instituições cadastradas em qualquer página ou post.
+7. Configure as opções no painel de administração de doações.
 
 ---
 
@@ -100,3 +106,5 @@ Este projeto está disponível para uso pessoal ou comercial. Por favor, mantenh
 #### **Contato**  
 Para mais informações, visite nosso site oficial:  
 [https://juntoaqui.com.br](https://juntoaqui.com.br)
+
+--- 
