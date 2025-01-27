@@ -442,6 +442,7 @@ function cid_doacoes_page() {
                     <th>Nome do Doador</th>
                     <th>E-mail do Doador</th>
                     <th>E-mail da Instituição</th>
+                    <th>Chave PIX</th> <!-- Nova coluna para Chave PIX -->
                 </tr>
             </thead>
             <tbody>
@@ -454,6 +455,19 @@ function cid_doacoes_page() {
                         <td><?php echo esc_html(get_post_meta($row->ID, '_billing_first_name', true) . ' ' . get_post_meta($row->ID, '_billing_last_name', true)); ?></td>
                         <td><?php echo esc_html(get_post_meta($row->ID, '_billing_email', true)); ?></td>
                         <td><?php echo esc_html(get_user_meta(get_post_meta($row->ID, '_instituicao', true), 'email', true)); ?></td>
+                        <td>
+                            <?php
+                            // Obter a ID da instituição
+                            $instituicao_id = get_post_meta($row->ID, '_instituicao', true);
+                            // Verificar se o usuário atual é o administrador ou a instituição correspondente
+                            if (current_user_can('administrator') || get_current_user_id() == $instituicao_id) {
+                                // Exibir a chave PIX
+                                echo esc_html(get_user_meta($instituicao_id, 'chave_pix', true));
+                            } else {
+                                echo 'Acesso restrito'; // Mensagem para usuários não autorizados
+                            }
+                            ?>
+                        </td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -461,7 +475,6 @@ function cid_doacoes_page() {
     </div>
     <?php
 }
-
 // Alterar status da doação para "pago"
 function cid_change_donation_status($order_id) {
     if (isset($_POST['change_donation_status']) && $_POST['change_donation_status'] === 'pago') {
