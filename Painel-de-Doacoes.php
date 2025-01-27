@@ -34,10 +34,14 @@ function cid_create_tables() {
         cidade varchar(50),
         estado varchar(2),
         cep varchar(9),
-        chave_pix varchar(50),
         email varchar(100),
+        atividades text,
+        banner varchar(255),
+        facebook varchar(255),
+        instagram varchar(255),
+        site_oficial varchar(255),
         user_id bigint(20),
-        depoimento text,  // Adicionado campo de depoimento
+        depoimento text,
         PRIMARY KEY (id)
     ) $charset_collate;";
 
@@ -50,10 +54,28 @@ function cid_instituicao_form() {
     ob_start(); ?>
     <form action="" method="post">
         <?php wp_nonce_field('cid_instituicao_form_nonce', 'cid_instituicao_form_nonce_field'); ?>
+        
+        <label for="nome">Nome da Instituição</label>
         <input type="text" name="nome" placeholder="Nome da Instituição" required>
+        <br>
+
+        <label for="cnpj">CNPJ</label>
         <input type="text" name="cnpj" placeholder="CNPJ" required>
+        <br>
+
+        <label for="atividades">Descreva suas atividades</label>
+        <textarea name="atividades" placeholder="Descreva suas atividades" required></textarea>
+        <br>
+
+        <label for="telefone">Telefone</label>
         <input type="text" name="telefone" placeholder="Telefone">
+        <br>
+
+        <label for="whatsapp">WhatsApp</label>
         <input type="text" name="whatsapp" placeholder="WhatsApp">
+        <br>
+
+        <label for="tipo">Tipo de Instituição</label>
         <select name="tipo" required>
             <option value="">Tipo de Instituição</option>
             <option value="hospital_cancer">Hospital de Câncer</option>
@@ -61,9 +83,21 @@ function cid_instituicao_form() {
             <option value="casa_recuperacao">Casa de Recuperação</option>
             <option value="instituicao_beneficiente">Instituição Beneficente</option>
         </select>
+        <br>
+
+        <label for="endereco">Endereço</label>
         <textarea name="endereco" placeholder="Endereço"></textarea>
+        <br>
+
+        <label for="bairro">Bairro</label>
         <input type="text" name="bairro" placeholder="Bairro">
+        <br>
+
+        <label for="cidade">Cidade</label>
         <input type="text" name="cidade" placeholder="Cidade">
+        <br>
+
+        <label for="estado">Estado</label>
         <select name="estado" required>
             <option value="">Estado</option>
             <?php
@@ -73,10 +107,32 @@ function cid_instituicao_form() {
             }
             ?>
         </select>
+        <br>
+
+        <label for="cep">CEP</label>
         <input type="text" name="cep" placeholder="CEP">
-        <input type="text" name="chave_pix" placeholder="Chave PIX">
+        <br>
+
+        <label for="email">E-mail</label>
         <input type="email" name="email" placeholder="E-mail" required>
-        <textarea name="depoimento" placeholder="Deixe seu depoimento"></textarea> <!-- Campo de depoimento -->
+        <br>
+
+        <label for="banner">URL do Banner</label>
+        <input type="text" name="banner" placeholder="URL do Banner">
+        <br>
+
+        <label for="facebook">URL do Facebook</label>
+        <input type="text" name="facebook" placeholder="URL do Facebook">
+        <br>
+
+        <label for="instagram">URL do Instagram</label>
+        <input type="text" name="instagram" placeholder="URL do Instagram">
+        <br>
+
+        <label for="site_oficial">Site Oficial (opcional)</label>
+        <input type="text" name="site_oficial" placeholder="Site Oficial (opcional)">
+        <br>
+
         <input type="submit" name="submit_instituicao" value="Cadastrar Instituição">
     </form>
     <?php
@@ -117,9 +173,12 @@ function cid_process_instituicao_form() {
         update_user_meta($user_id, 'cidade', sanitize_text_field($_POST['cidade']));
         update_user_meta($user_id, 'estado', sanitize_text_field($_POST['estado']));
         update_user_meta($user_id, 'cep', sanitize_text_field($_POST['cep']));
-        update_user_meta($user_id, 'chave_pix', sanitize_text_field($_POST['chave_pix']));
         update_user_meta($user_id, 'email', sanitize_email($_POST['email']));
-        update_user_meta($user_id, 'depoimento', sanitize_textarea_field($_POST['depoimento'])); // Armazenar depoimento
+        update_user_meta($user_id, 'atividades', sanitize_textarea_field($_POST['atividades']));
+        update_user_meta($user_id, 'banner', sanitize_text_field($_POST['banner']));
+        update_user_meta($user_id, 'facebook', sanitize_text_field($_POST['facebook']));
+        update_user_meta($user_id, 'instagram', sanitize_text_field($_POST['instagram']));
+        update_user_meta($user_id, 'site_oficial', sanitize_text_field($_POST['site_oficial']));
 
         $wpdb->insert($table_name, array(
             'nome' => sanitize_text_field($_POST['nome']),
@@ -132,8 +191,12 @@ function cid_process_instituicao_form() {
             'cidade' => sanitize_text_field($_POST['cidade']),
             'estado' => sanitize_text_field($_POST['estado']),
             'cep' => sanitize_text_field($_POST['cep']),
-            'chave_pix' => sanitize_text_field($_POST['chave_pix']),
             'email' => sanitize_email($_POST['email']),
+            'atividades' => sanitize_textarea_field($_POST['atividades']),
+            'banner' => sanitize_text_field($_POST['banner']),
+            'facebook' => sanitize_text_field($_POST['facebook']),
+            'instagram' => sanitize_text_field($_POST['instagram']),
+            'site_oficial' => sanitize_text_field($_POST['site_oficial']),
             'user_id' => $user_id
         ));
 
@@ -150,6 +213,28 @@ function cid_process_instituicao_form() {
     }
 }
 add_action('init', 'cid_process_instituicao_form');
+
+// Exibir instituições cadastradas
+function cid_exibir_instituicoes() {
+    global $wpdb;
+    $instituicoes = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}instituicoes");
+
+    if ($instituicoes) {
+        echo '<div class="instituicoes">';
+        foreach ($instituicoes as $instituicao) {
+            echo '<div class="instituicao">';
+            echo '<h3>' . esc_html($instituicao->nome) . '</h3>';
+            echo '<p>' . esc_html($instituicao->atividades) . '</p>'; // Exibir atividades
+            echo '<p><strong>Facebook:</strong> <a href="' . esc_url($instituicao->facebook) . '">' . esc_html($instituicao->facebook) . '</a></p>';
+            echo '<p><strong>Instagram:</strong> <a href="' . esc_url($instituicao->instagram) . '">' . esc_html($instituicao->instagram) . '</a></p>';
+            echo '<p><strong>Site Oficial:</strong> <a href="' . esc_url($instituicao->site_oficial) . '">' . esc_html($instituicao->site_oficial) . '</a></p>';
+            echo '<img src="' . esc_url($instituicao->banner) . '" alt="Banner da Instituição" style="max-width: 100%; height: auto;">'; // Exibir banner
+            echo '</div>';
+        }
+        echo '</div>';
+    }
+}
+add_shortcode('exibir_instituicoes', 'cid_exibir_instituicoes');
 
 // Exibir depoimentos
 function cid_exibir_depoimentos() {
@@ -291,7 +376,6 @@ function cid_save_donation_field($order_id) {
         $admin_message .= "Cliente: " . get_post_meta($order_id, '_billing_first_name', true) . " " . get_post_meta($order_id, '_billing_last_name', true) . "\n";
         $admin_message .= "Instituição: " . $instituicao_nome . "\n";
         $admin_message .= "Valor da doação: R$ " . number_format($donation_amount, 2, ',', '.') . "\n";
-        $admin_message .= "Chave PIX da instituição: " . get_user_meta($instituicao_id, 'chave_pix', true) . "\n";
         wp_mail(get_option('admin_email'), 'Nova Doação Recebida', $admin_message);
     }
 }
@@ -350,7 +434,6 @@ function cid_doacoes_page() {
                     <th>Nome do Doador</th>
                     <th>E-mail do Doador</th>
                     <th>E-mail da Instituição</th>
-                    <th>Chave PIX da Instituição</th>
                 </tr>
             </thead>
             <tbody>
@@ -363,7 +446,6 @@ function cid_doacoes_page() {
                         <td><?php echo esc_html(get_post_meta($row->ID, '_billing_first_name', true) . ' ' . get_post_meta($row->ID, '_billing_last_name', true)); ?></td>
                         <td><?php echo esc_html(get_post_meta($row->ID, '_billing_email', true)); ?></td>
                         <td><?php echo esc_html(get_user_meta(get_post_meta($row->ID, '_instituicao', true), 'email', true)); ?></td>
-                        <td><?php echo esc_html(get_user_meta(get_post_meta($row->ID, '_instituicao', true), 'chave_pix', true)); ?></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -403,7 +485,6 @@ function cid_change_donation_status($order_id) {
         $admin_message .= "Cliente: " . get_post_meta($order_id, '_billing_first_name', true) . " " . get_post_meta($order_id, '_billing_last_name', true) . "\n";
         $admin_message .= "Instituição: " . $instituicao_nome . "\n";
         $admin_message .= "Valor pago: R$ " . number_format($donation_amount, 2, ',', '.') . "\n";
-        $admin_message .= "Chave PIX da instituição: " . get_user_meta($instituicao_id, 'chave_pix', true) . "\n";
         wp_mail(get_option('admin_email'), 'Doação Paga', $admin_message);
     }
 }
