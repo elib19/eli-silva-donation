@@ -236,7 +236,12 @@ function cid_exibir_instituicoes() {
 
     if ($instituicoes) {
         echo '<div class="instituicoes">';
+        $total_dado = 0; // Inicializa o total doado
         foreach ($instituicoes as $instituicao) {
+            // Obter o valor doado para a instituição
+            $donation_amount = get_post_meta($instituicao->user_id, '_donation_amount', true);
+            $total_dado += $donation_amount; // Soma ao total doado
+
             echo '<div class="instituicao" style="border: 1px solid #ccc; padding: 10px; margin: 10px;">'; // Adiciona borda
             echo '<h3>' . esc_html($instituicao->nome) . '</h3>';
             echo '<p>' . esc_html($instituicao->atividades) . '</p>'; // Exibir atividades
@@ -244,16 +249,12 @@ function cid_exibir_instituicoes() {
             echo '<p><strong>Facebook:</strong> <a href="' . esc_url($instituicao->facebook) . '">' . esc_html($instituicao->facebook) . '</a></p>';
             echo '<p><strong>Instagram:</strong> <a href="' . esc_url($instituicao->instagram) . '">' . esc_html($instituicao->instagram) . '</a></p>';
             echo '<p><strong>Site Oficial:</strong> <a href="' . esc_url($instituicao->site_oficial) . '">' . esc_html($instituicao->site_oficial) . '</a></p>';
-            // Removido o banner
+            echo '<p><strong>Valor doado:</strong> R$ ' . number_format($donation_amount, 2, ',', '.') . '</p>'; // Exibir valor doado individual
             echo '</div>';
         }
         echo '</div>';
 
         // Exibir total doado
-        $total_dado = 0;
-        foreach ($instituicoes as $instituicao) {
-            $total_dado += get_post_meta($instituicao->user_id, '_donation_amount', true); // Supondo que o valor doado está armazenado no meta do usuário
-        }
         echo '<h4>Total doado: R$ ' . number_format($total_dado, 2, ',', '.') . '</h4>';
 
         // Paginação
