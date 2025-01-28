@@ -225,6 +225,7 @@ add_action('init', 'cid_process_instituicao_form');
 // Exibir instituições cadastradas
 function cid_exibir_instituicoes() {
     global $wpdb;
+    // Seleciona todas as instituições que não estão excluídas
     $instituicoes = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}instituicoes WHERE excluido = 0 LIMIT 16");
 
     // Calcular o total de doações
