@@ -229,6 +229,7 @@ function cid_exibir_instituicoes() {
     $limit = 16;
     $offset = ($page - 1) * $limit;
 
+    // Obter instituições ativas
     $instituicoes = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}instituicoes WHERE excluido = 0 LIMIT $offset, $limit");
 
     // Calcular o total de doações
@@ -239,14 +240,15 @@ function cid_exibir_instituicoes() {
 
     ob_start(); // Iniciar o buffer de saída
 
+    // Exibir total de doações
     echo '<h2>Total de Doações: R$ ' . number_format($total_doacoes, 2, ',', '.') . '</h2>';
 
     if ($instituicoes) {
-        echo '<div class="instituicoes-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">';
+        echo '<div class="instituicoes-grid" style="display: flex; flex-wrap: wrap; gap: 20px;">';
         foreach ($instituicoes as $instituicao) {
-            echo '<div class="instituicao" style="border: 1px solid #ddd; border-radius: 5px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">';
-            echo '<img src="' . esc_url($instituicao->banner) . '" alt="Banner da Instituição" style="width: 100%; height: auto; border-radius: 5px;">';
+            echo '<div class="instituicao" style="border: 1px solid #ddd; border-radius: 5px; padding: 15px; width: calc(25% - 20px); box-shadow: 0 2px 5px rgba(0,0,0,0.1);">';
             echo '<h3 style="margin: 10px 0;">' . esc_html($instituicao->nome) . '</h3>';
+            echo '<p><strong>CNPJ:</strong> ' . esc_html($instituicao->cnpj) . '</p>';
             echo '</div>';
         }
         echo '</div>'; // Fechar a div da grid
