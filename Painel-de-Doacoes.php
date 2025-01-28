@@ -249,6 +249,7 @@ function cid_exibir_instituicoes() {
             echo '<div class="instituicao" style="border: 1px solid #ddd; border-radius: 5px; padding: 15px; width: calc(25% - 20px); box-shadow: 0 2px 5px rgba(0,0,0,0.1);">';
             echo '<h3 style="margin: 10px 0;">' . esc_html($instituicao->nome) . '</h3>';
             echo '<p><strong>CNPJ:</strong> ' . esc_html($instituicao->cnpj) . '</p>';
+            echo '<p><strong>Atividades:</strong> ' . esc_html($instituicao->atividades) . '</p>'; // Exibir atividades
             echo '</div>';
         }
         echo '</div>'; // Fechar a div da grid
