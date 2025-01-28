@@ -36,7 +36,6 @@ function cid_create_tables() {
         cep varchar(9),
         email varchar(100),
         atividades text,
-        banner varchar(255),
         facebook varchar(255),
         instagram varchar(255),
         site_oficial varchar(255),
@@ -119,22 +118,6 @@ function cid_instituicao_form() {
         <input type="email" name="email" placeholder="E-mail" required>
         <br>
 
-        <label for="banner">URL do Banner</label><br>
-        <input type="text" name="banner" placeholder="URL do Banner">
-        <br>
-
-        <label for="facebook">URL do Facebook</label><br>
-        <input type="text" name="facebook" placeholder="URL do Facebook">
-        <br>
-
-        <label for="instagram">URL do Instagram</label><br>
-        <input type="text" name="instagram" placeholder="URL do Instagram">
-        <br>
-
-        <label for="site_oficial">Site Oficial (opcional)</label><br>
-        <input type="text" name="site_oficial" placeholder="Site Oficial (opcional)">
-        <br>
-
         <label for="chave_pix">Chave PIX</label><br>
         <input type="text" name="chave_pix" placeholder="Chave PIX" required>
         <br>
@@ -181,10 +164,6 @@ function cid_process_instituicao_form() {
         update_user_meta($user_id, 'cep', sanitize_text_field($_POST['cep']));
         update_user_meta($user_id, 'email', sanitize_email($_POST['email']));
         update_user_meta($user_id, 'atividades', sanitize_textarea_field($_POST['atividades']));
-        update_user_meta($user_id, 'banner', sanitize_text_field($_POST['banner']));
-        update_user_meta($user_id, 'facebook', sanitize_text_field($_POST['facebook']));
-        update_user_meta($user_id, 'instagram', sanitize_text_field($_POST['instagram']));
-        update_user_meta($user_id, 'site_oficial', sanitize_text_field($_POST['site_oficial']));
         update_user_meta($user_id, 'chave_pix', sanitize_text_field($_POST['chave_pix']));
 
         $wpdb->insert($table_name, array(
@@ -200,10 +179,6 @@ function cid_process_instituicao_form() {
             'cep' => sanitize_text_field($_POST['cep']),
             'email' => sanitize_email($_POST['email']),
             'atividades' => sanitize_textarea_field($_POST['atividades']),
-            'banner' => sanitize_text_field($_POST['banner']),
-            'facebook' => sanitize_text_field($_POST['facebook']),
-            'instagram' => sanitize_text_field($_POST['instagram']),
-            'site_oficial' => sanitize_text_field($_POST['site_oficial']),
             'chave_pix' => sanitize_text_field($_POST['chave_pix']),
             'user_id' => $user_id
         ));
@@ -249,7 +224,6 @@ function cid_exibir_instituicoes() {
             echo '<div class="instituicao" style="border: 1px solid #ddd; border-radius: 5px; padding: 15px; width: calc(25% - 20px); box-shadow: 0 2px 5px rgba(0,0,0,0.1);">';
             echo '<h3 style="margin: 10px 0;">' . esc_html($instituicao->nome) . '</h3>';
             echo '<p><strong>CNPJ:</strong> ' . esc_html($instituicao->cnpj) . '</p>';
-            echo '<p><strong>Atividades:</strong> ' . esc_html($instituicao->atividades) . '</p>'; // Exibir atividades
             echo '</div>';
         }
         echo '</div>'; // Fechar a div da grid
