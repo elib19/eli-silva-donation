@@ -118,6 +118,18 @@ function cid_instituicao_form() {
         <input type="email" name="email" placeholder="E-mail" required>
         <br>
 
+        <label for="facebook">URL do Facebook</label><br>
+        <input type="text" name="facebook" placeholder="URL do Facebook">
+        <br>
+
+        <label for="instagram">URL do Instagram</label><br>
+        <input type="text" name="instagram" placeholder="URL do Instagram">
+        <br>
+
+        <label for="site_oficial">Site Oficial (opcional)</label><br>
+        <input type="text" name="site_oficial" placeholder="Site Oficial (opcional)">
+        <br>
+
         <label for="chave_pix">Chave PIX</label><br>
         <input type="text" name="chave_pix" placeholder="Chave PIX" required>
         <br>
@@ -164,6 +176,9 @@ function cid_process_instituicao_form() {
         update_user_meta($user_id, 'cep', sanitize_text_field($_POST['cep']));
         update_user_meta($user_id, 'email', sanitize_email($_POST['email']));
         update_user_meta($user_id, 'atividades', sanitize_textarea_field($_POST['atividades']));
+        update_user_meta($user_id, 'facebook', sanitize_text_field($_POST['facebook']));
+        update_user_meta($user_id, 'instagram', sanitize_text_field($_POST['instagram']));
+        update_user_meta($user_id, 'site_oficial', sanitize_text_field($_POST['site_oficial']));
         update_user_meta($user_id, 'chave_pix', sanitize_text_field($_POST['chave_pix']));
 
         $wpdb->insert($table_name, array(
@@ -179,7 +194,6 @@ function cid_process_instituicao_form() {
             'cep' => sanitize_text_field($_POST['cep']),
             'email' => sanitize_email($_POST['email']),
             'atividades' => sanitize_textarea_field($_POST['atividades']),
-            'chave_pix' => sanitize_text_field($_POST['chave_pix']),
             'user_id' => $user_id
         ));
 
@@ -200,12 +214,7 @@ add_action('init', 'cid_process_instituicao_form');
 // Exibir instituições cadastradas
 function cid_exibir_instituicoes() {
     global $wpdb;
-    $page = (get_query_var('paged')) ? get_query_var('paged') : 1;
-    $limit = 16;
-    $offset = ($page - 1) * $limit;
-
-    // Obter instituições ativas
-    $instituicoes = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}instituicoes WHERE excluido = 0 LIMIT $offset, $limit");
+    $instituicoes = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}instituicoes WHERE excluido = 0 LIMIT 16");
 
     // Calcular o total de doações
     $total_doacoes = 0;
@@ -215,33 +224,26 @@ function cid_exibir_instituicoes() {
 
     ob_start(); // Iniciar o buffer de saída
 
-    // Exibir total de doações
     echo '<h2>Total de Doações: R$ ' . number_format($total_doacoes, 2, ',', '.') . '</h2>';
 
     if ($instituicoes) {
-        echo '<div class="instituicoes-grid" style="display: flex; flex-wrap: wrap; gap: 20px;">';
+        echo '<div class="instituicoes-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">';
         foreach ($instituicoes as $instituicao) {
-            echo '<div class="instituicao" style="border: 1px solid #ddd; border-radius: 5px; padding: 15px; width: calc(25% - 20px); box-shadow: 0 2px 5px rgba(0,0,0,0.1);">';
+            echo '<div class="instituicao" style="border: 1px solid #ddd; border-radius: 5px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">';
             echo '<h3 style="margin: 10px 0;">' . esc_html($instituicao->nome) . '</h3>';
             echo '<p><strong>CNPJ:</strong> ' . esc_html($instituicao->cnpj) . '</p>';
+            echo '<p>' . esc_html($instituicao->atividades) . '</p>';
+            echo '<p><strong>Facebook:</strong> <a href="' . esc_url($instituicao->facebook) . '" target="_blank">' . esc_html($instituicao->facebook) . '</a></p>';
+            echo '<p><strong>Instagram:</strong> <a href="' . esc_url($instituicao->instagram) . '" target="_blank">' . esc_html($instituicao->instagram) . '</a></p>';
+            echo '<p><strong>Site Oficial:</strong> <a href="' . esc_url($instituicao->site_oficial) . '" target="_blank">' . esc_html($instituicao->site_oficial) . '</a></p>';
+            
+            // Exibir chave PIX apenas para administradores ou a própria instituição
+            if (current_user_can('administrator') || get_current_user_id() == $instituicao->user_id) {
+                echo '<p><strong>Chave PIX:</strong> ' . esc_html($instituicao->chave_pix) . '</p>';
+            }
             echo '</div>';
         }
         echo '</div>'; // Fechar a div da grid
-
-        // Paginação
-        $total_instituicoes = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}instituicoes WHERE excluido = 0");
-        $total_pages = ceil($total_instituicoes / $limit);
-        $current_page = max(1, get_query_var('paged'));
-
-        echo '<div class="pagination">';
-        for ($i = 1; $i <= $total_pages; $i++) {
-            if ($i == $current_page) {
-                echo '<span>' . $i . '</span>';
-            } else {
-                echo '<a href="' . get_pagenum_link($i) . '">' . $i . '</a>';
-            }
-        }
-        echo '</div>';
     } else {
         echo '<p>Nenhuma instituição cadastrada.</p>';
     }
