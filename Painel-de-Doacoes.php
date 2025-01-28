@@ -3,7 +3,7 @@
  * Plugin Name: Painel de Doações
  * Plugin URI: https://juntoaqui.com.br
  * Description: Plugin para adicionar funcionalidades de doação ao WooCommerce, com seleção de instituição na página do produto e envio de e-mail para o administrador.
- * Version: 1.1.0
+ * Version: 1.1.1
  * Author: Eli Silva
  * Author URI: https://juntoaqui.com.br
  * Text Domain: Painel de Doações
@@ -530,7 +530,6 @@ function cid_change_donation_status($order_id) {
         $instituicao_message = "Você recebeu um pagamento de doação!\n\n";
         $instituicao_message .= "Cliente: " . get_post_meta($order_id, '_billing_first_name', true) . " " . get_post_meta($order_id, '_billing_last_name', true) . "\n";
         $instituicao_message .= "Valor pago: R$ " . number_format($donation_amount, 2, ',', '.') . "\n";
-        $instituicao_message ```php
         $instituicao_message .= "Por favor, confira seu extrato bancário.";
         wp_mail($instituicao_email, 'Pagamento de Doação Recebido', $instituicao_message);
 
