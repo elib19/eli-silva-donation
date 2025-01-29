@@ -39,7 +39,8 @@ function cid_create_tables() {
         facebook varchar(255),
         instagram varchar(255),
         site_oficial varchar(255),
-        chave_pix varchar(255),  // Novo campo para chave PIX
+        chave_pix varchar(255),
+        uso_das_doacoes text,  // Novo campo para uso das doações
         user_id bigint(20),
         depoimento text,
         PRIMARY KEY (id)
@@ -133,6 +134,10 @@ function cid_instituicao_form() {
         <input type="text" name="chave_pix" placeholder="Chave PIX" required>
         <br>
 
+        <label for="uso_das_doacoes">Como você pretende usar as doações?</label><br>
+        <textarea name="uso_das_doacoes" placeholder="Descreva como você pretende usar as doações" required></textarea>
+        <br>
+
         <input type="submit" name="submit_instituicao" value="Cadastrar Instituição">
     </form>
     <?php
@@ -179,6 +184,7 @@ function cid_process_instituicao_form() {
         update_user_meta($user_id, 'instagram', sanitize_text_field($_POST['instagram']));
         update_user_meta($user_id, 'site_oficial', sanitize_text_field($_POST['site_oficial']));
         update_user_meta($user_id, 'chave_pix', sanitize_text_field($_POST['chave_pix'])); // Salvar chave PIX
+        update_user_meta($user_id, 'uso_das_doacoes', sanitize_textarea_field($_POST['uso_das_doacoes'])); // Salvar uso das doações
 
         $wpdb->insert($table_name, array(
             'nome' => sanitize_text_field($_POST['nome']),
@@ -234,37 +240,51 @@ function cid_exibir_instituicoes() {
     // Limitar a exibição
     $instituicoes = array_slice($instituicoes, $offset, $per_page);
 
-    if ($instituicoes) {
-        echo '<div class="instituicoes">';
-        $total_dado = 0; // Inicializa o total doado
-        foreach ($instituicoes as $instituicao) {
-            // Obter o valor doado para a instituição
-            $donation_amount = get_post_meta($instituicao->user_id, '_donation_amount', true);
-            $total_dado += $donation_amount; // Soma ao total doado
+    // Calcular o total geral doado
+    $total_geral_dado = 0;
+    foreach ($instituicoes as $instituicao) {
+        $valor_doacoes_recebidas = get_post_meta($instituicao->user_id, '_donation_amount', true);
+        $total_geral_dado += $valor_doacoes_recebidas ? floatval($valor_doacoes_recebidas) : 0; // Adiciona o valor das doações
+    }
 
-            echo '<div class="instituicao" style="border: 1px solid #ccc; padding: 10px; margin: 10px;">'; // Adiciona borda
+    // Exibir total geral doado
+    echo '<h4>Total Geral Doado: R$ ' . number_format($total_geral_dado, 2, ',', '.') . '</h4>';
+
+    if (!empty($instituicoes)) {
+        echo '<div class="instituicoes">';
+        foreach ($instituicoes as $instituicao) {
+            // Obter o valor total de doações recebidas por cada instituição
+            $valor_doacoes_recebidas = get_post_meta($instituicao->user_id, '_donation_amount', true);
+            $valor_doacoes_recebidas = $valor_doacoes_recebidas ? floatval($valor_doacoes_recebidas) : 0; // Garantir que seja um número
+
+            // Obter a descrição de como as doações serão usadas
+            $uso_das_doacoes = get_user_meta($instituicao->user_id, 'uso_das_doacoes', true);
+
+            echo '<div class="instituicao" style="border: 1px solid #ccc; padding: 10px; margin: 10px;">';
             echo '<h3>' . esc_html($instituicao->nome) . '</h3>';
             echo '<p>' . esc_html($instituicao->atividades) . '</p>'; // Exibir atividades
-            echo '<p><strong>Chave PIX:</strong> ' . esc_html($instituicao->chave_pix) . '</p>'; // Exibir chave PIX
-            echo '<p><strong>Facebook:</strong> <a href="' . esc_url($instituicao->facebook) . '">' . esc_html($instituicao->facebook) . '</a></p>';
-            echo '<p><strong>Instagram:</strong> <a href="' . esc_url($instituicao->instagram) . '">' . esc_html($instituicao->instagram) . '</a></p>';
-            echo '<p><strong>Site Oficial:</strong> <a href="' . esc_url($instituicao->site_oficial) . '">' . esc_html($instituicao->site_oficial) . '</a></p>';
-            echo '<p><strong>Valor doado:</strong> R$ ' . number_format($donation_amount, 2, ',', '.') . '</p>'; // Exibir valor doado individual
-            echo '</div>';
+            echo '<p><strong>CNPJ:</strong> ' . esc_html($instituicao->cnpj) . '</p>'; // Exibir CNPJ
+            echo '<p><strong>Telefone:</strong> ' . esc_html($instituicao->telefone) . '</p>'; // Exibir Telefone
+            echo '<p><strong>WhatsApp:</strong> ' . esc_html($instituicao->whatsapp) . '</p>'; // Exibir WhatsApp
+            echo '<p><strong>Facebook:</strong> <a href="' . esc_url($instituicao->facebook) . '">' . esc_html($instituicao->facebook) . '</a></p>'; // Exibir Facebook
+            echo '<p><strong>Instagram:</strong> <a href="' . esc_url($instituicao->instagram) . '">' . esc_html($instituicao->instagram) . '</a></p>'; // Exibir Instagram
+            echo '<p><strong>Site Oficial:</strong> <a href="' . esc_url($instituicao->site_oficial) . '">' . esc_html($instituicao->site_oficial) . '</a></p>'; // Exibir Site Oficial
+            echo '<p><strong>Valor de doações recebidas:</strong> R$ ' . number_format($valor_doacoes_recebidas, 2, ',', '.') . '</p>'; // Exibir valor de doações recebidas
+            echo '<p><strong>Como as doações serão usadas:</strong> ' . esc_html($uso_das_doacoes) . '</p>'; // Exibir uso das doações
+            echo '</div>'; // Fechar div da instituição
         }
-        echo '</div>';
+        echo '</div>'; // Fechar div das instituições
+    } else {
+        echo '<p>Nenhuma instituição encontrada.</p>'; // Mensagem caso não haja instituições
+    }
 
-        // Exibir total doado
-        echo '<h4>Total doado: R$ ' . number_format($total_dado, 2, ',', '.') . '</h4>';
-
-        // Paginação
+    // Exibir paginação
+    if ($total_pages > 1) {
         echo '<div class="pagination">';
         for ($i = 1; $i <= $total_pages; $i++) {
             echo '<a href="?paged=' . $i . '">' . $i . '</a> ';
         }
-        echo '</div>';
-    } else {
-        echo '<p>Nenhuma instituição encontrada.</p>';
+        echo '</div>'; // Fechar div de paginação
     }
 }
 add_shortcode('exibir_instituicoes', 'cid_exibir_instituicoes');
@@ -550,7 +570,7 @@ function cid_change_donation_status($order_id) {
         $admin_message .= "Cliente: " . get_post_meta($order_id, '_billing_first_name', true) . " " . get_post_meta($order_id, '_billing_last_name', true) . "\n";
         $admin_message .= "Instituição: " . $instituicao_nome . "\n";
         $admin_message .= "Valor pago: R$ " . number_format($donation_amount, 2, ',', '.') . "\n";
-        wp_mail(get_option('admin_email'), 'Doação Paga', $admin_message);
+                wp_mail(get_option('admin_email'), 'Doação Paga', $admin_message);
     }
 }
 add_action('woocommerce_order_status_changed', 'cid_change_donation_status');
