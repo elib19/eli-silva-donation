@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Painel de Doações
- * Plugin URI: https://juntoaqui.com.br
+ * Plugin URI: https://github.com/elib19/eli-silva-donation/
  * Description: Plugin para adicionar funcionalidades de doação ao WooCommerce, com seleção de instituição na página do produto e envio de e-mail para o administrador.
  * Version: 1.1.2
  * Author: Eli Silva
