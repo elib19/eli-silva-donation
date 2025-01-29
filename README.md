@@ -103,6 +103,7 @@ Este sistema foi desenvolvido para gerenciar doações no WordPress, integrado a
 ---
 
 #### **Licença**  
+GPLv2 
 Este projeto está disponível para uso pessoal ou comercial. Por favor, mantenha os créditos ao autor.
 
 ---
