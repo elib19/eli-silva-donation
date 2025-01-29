@@ -1,5 +1,3 @@
----
-
 ### README - Sistema de Gerenciamento de Doações no WordPress com Integração ao WooCommerce
 
 ---
@@ -103,8 +101,8 @@ Este sistema foi desenvolvido para gerenciar doações no WordPress, integrado a
 ---
 
 #### **Licença**  
-GPLv2 
-Este projeto está disponível para uso pessoal ou comercial. Por favor, mantenha os créditos ao autor.
+**GPLv2**  
+Este projeto está disponível para uso pessoal ou comercial. Por favor, mantenha os créditos ao autor. Este plugin é licenciado sob a Licença Pública Geral GNU (GPL) versão 2 ou posterior. Para mais informações, consulte [GNU.org](https://www.gnu.org/licenses/gpl-2.0.html).
 
 ---
 
@@ -112,4 +110,4 @@ Este projeto está disponível para uso pessoal ou comercial. Por favor, mantenh
 Para mais informações, visite nosso site oficial:  
 [https://juntoaqui.com.br](https://juntoaqui.com.br)
 
---- 
+---
