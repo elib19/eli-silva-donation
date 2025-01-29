@@ -1,4 +1,3 @@
-
 ---
 
 ### README - Sistema de Gerenciamento de Doações no WordPress com Integração ao WooCommerce
@@ -37,8 +36,8 @@ Este sistema foi desenvolvido para gerenciar doações no WordPress, integrado a
 
 4. **Integração ao Carrinho do WooCommerce**  
    - Campo adicional no carrinho com um `select` para escolher a instituição que receberá a doação.
-   - Permite configurar percentuais de doação (padrão 30%, configurável entre 0% e 100%).
-   - Percentual é aplicado automaticamente ao valor total dos produtos no carrinho.
+   - Permite configurar percentuais de doação (configurável entre 0% e 40%).
+   - O percentual é aplicado automaticamente ao valor total dos produtos no carrinho.
    - O campo de seleção da instituição é obrigatório apenas se houver pelo menos uma instituição cadastrada.
 
 5. **Notificações por E-mail**  
@@ -54,6 +53,10 @@ Este sistema foi desenvolvido para gerenciar doações no WordPress, integrado a
 6. **Automação de Processos**  
    - Dados de doadores puxados automaticamente do WooCommerce.
    - Integração direta com banco de dados para gerenciar doações e instituições.
+
+7. **Configuração de Percentual de Doação**  
+   - O administrador pode ajustar o percentual de doação entre 0% e 40% diretamente no painel de administração.
+   - A configuração é acessível através do menu de configurações do WordPress.
 
 ---
 
@@ -95,6 +98,7 @@ Este sistema foi desenvolvido para gerenciar doações no WordPress, integrado a
 4. As instituições podem usar o shortcode `[form_depoimento]` para acessar o formulário de depoimento e cadastrar ou editar suas experiências.  
 5. Gerencie os status de pagamento das doações diretamente no painel administrativo.  
 6. Verifique notificações por e-mail para acompanhar o processo de doação.
+7. Ajuste o percentual de doação no menu de configurações do WordPress.
 
 ---
 
