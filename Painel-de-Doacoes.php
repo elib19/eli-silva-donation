@@ -532,7 +532,7 @@ function cid_admin_notice() {
             <li><?php _e('Crie uma nova página para exibir as instituições cadastradas e adicione o shortcode: <code>[exibir_instituicoes]</code>', 'Painel de Doações'); ?></li>
             <li><?php _e('Crie uma nova página para exibir os depoimentos e adicione o shortcode: <code>[exibir_depoimentos]</code>', 'Painel de Doações'); ?></li>
             <li><?php _e('Crie uma nova página para as instituições adicionarem os depoimentos e adicione o shortcode: <code>[form_depoimento]</code>', 'Painel de Doações'); ?></li>
-            <li><?php _e('Configure a porcentagem das doações clicando em configurações e depois em <code>Doação</code> é possível configurar o percentual de 0 a 40% do valor do pedido para doações.', 'Painel de Doações'); ?></li>
+            <li><?php _e('Configure a porcentagem das doações clicando em <code>Configurações</code> e depois em <code>Doação</code> é possível configurar o percentual de 0 a 40% do valor do pedido para doações.', 'Painel de Doações'); ?></li>
         </ul>
         <p><?php _e('Para mais informações, visite nosso site: <a href="https://juntoaqui.com.br" target="_blank">juntoaqui.com.br</a>', 'Painel de Doações'); ?></p>
     </div>
