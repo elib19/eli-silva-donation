@@ -48,7 +48,7 @@ Este sistema foi desenvolvido para gerenciar doações no WordPress, integrado a
    - **Após Confirmação de Pagamento**:
      - Notificações automáticas para o administrador, instituição e cliente.
 
-6. **Automação de Processos**  
+6. **Automatização de Processos**  
    - Dados de doadores puxados automaticamente do WooCommerce.
    - Integração direta com banco de dados para gerenciar doações e instituições.
 
@@ -72,11 +72,8 @@ Este sistema foi desenvolvido para gerenciar doações no WordPress, integrado a
 1. Copie o código fornecido e salve em um arquivo PHP no diretório de temas ou plugins do WordPress.
    - Exemplo: `wp-content/plugins/sistema-doacoes/sistema-doacoes.php`.
 2. Ative o plugin pelo painel administrativo do WordPress.
-3. Use o shortcode `[form_doacao]` para inserir o formulário de cadastro em qualquer página.
-4. Use o shortcode `[form_depoimento]` para permitir que as instituições logadas adicionem ou editem seus depoimentos.
-5. Use o shortcode `[exibir_depoimentos]` para mostrar os depoimentos cadastrados em qualquer página ou post.
-6. Use o shortcode `[exibir_instituicoes]` para mostrar as instituições cadastradas em qualquer página ou post.
-7. Configure as opções no painel de administração de doações.
+3. Use os shortcodes mencionados para exibir os formulários e listas de instituições.
+4. Configure as opções no painel de administração de doações.
 
 ---
 
@@ -88,25 +85,12 @@ Este sistema foi desenvolvido para gerenciar doações no WordPress, integrado a
 
 ---
 
-#### **Como Usar**
-
-1. Acesse o painel de administração e cadastre instituições utilizando o formulário shortcode.  
-2. Certifique-se de que o WooCommerce está ativo e funcional no site.  
-3. Ao adicionar produtos ao carrinho, o cliente poderá selecionar a instituição para doação.  
-4. As instituições podem usar o shortcode `[form_depoimento]` para acessar o formulário de depoimento e cadastrar ou editar suas experiências.  
-5. Gerencie os status de pagamento das doações diretamente no painel administrativo.  
-6. Verifique notificações por e-mail para acompanhar o processo de doação.
-7. Ajuste o percentual de doação no menu de configurações do WordPress.
-
----
-
 #### **Licença**  
-**GPLv2**  
-Este projeto está disponível para uso pessoal ou comercial. Por favor, mantenha os créditos ao autor. Este plugin é licenciado sob a Licença Pública Geral GNU (GPL) versão 2 ou posterior. Para mais informações, consulte [GNU.org](https://www.gnu.org/licenses/gpl-2.0.html).
+Este plugin é distribuído sob a **Licença Pública Geral GNU (GPL) v2 ou posterior**. Isso significa que você tem liberdade para usá-lo, modificá-lo e distribuí-lo, desde que mantenha a mesma licença. Para mais informações, consulte [GNU.org](https://www.gnu.org/licenses/gpl-2.0.html).
+
 ---
 
 #### **Contato**  
 Para mais informações, visite nosso site oficial:  
 [https://juntoaqui.com.br](https://juntoaqui.com.br)
 
----
