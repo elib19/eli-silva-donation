@@ -40,7 +40,7 @@ function cid_create_tables() {
         instagram varchar(255),
         site_oficial varchar(255),
         chave_pix varchar(255),
-        uso_das_doacoes text,  // Novo campo para uso das doações
+        uso_das_doacoes text,
         user_id bigint(20),
         depoimento text,
         PRIMARY KEY (id)
@@ -396,7 +396,7 @@ function cid_save_donation_field($order_id) {
         update_post_meta($order_id, '_instituicao', sanitize_text_field($_POST['instituicao']));
         
         // Calcular percentual de doação
-        $donation_percentage = get_option('doacao_percentual', 30); // Padrão 30%
+        $donation_percentage = get_option('doacao_percentual', 0); // Padrão 0%
         $order = wc_get_order($order_id);
         $total = $order->get_total();
         $donation_amount = $total * ($donation_percentage / 100); // Percentual do total
@@ -570,7 +570,7 @@ function cid_change_donation_status($order_id) {
         $admin_message .= "Cliente: " . get_post_meta($order_id, '_billing_first_name', true) . " " . get_post_meta($order_id, '_billing_last_name', true) . "\n";
         $admin_message .= "Instituição: " . $instituicao_nome . "\n";
         $admin_message .= "Valor pago: R$ " . number_format($donation_amount, 2, ',', '.') . "\n";
-                wp_mail(get_option('admin_email'), 'Doação Paga', $admin_message);
+        wp_mail(get_option('admin_email'), 'Doação Paga', $admin_message);
     }
 }
 add_action('woocommerce_order_status_changed', 'cid_change_donation_status');
@@ -604,8 +604,8 @@ function cid_doacao_settings_page() {
 }
 
 function cid_doacao_percentual_callback() {
-    $percentual = get_option('doacao_percentual', 30); // Alterado para 30%
-    echo '<input type="number" name="doacao_percentual" value="' . esc_attr($percentual) . '" min="0" max="100" /> %';
+    $percentual = get_option('doacao_percentual', 0); // Alterado para 0%
+    echo '<input type="number" name="doacao_percentual" value="' . esc_attr($percentual) . '" min="0" max="40" /> %';
 }
 
 // Garantir que o CSS e JS já criados estejam funcionando
