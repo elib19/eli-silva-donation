@@ -560,23 +560,13 @@ function cid_change_donation_status($order_id) {
         wp_mail($client_email, 'Confirmação de Pagamento da Doação', $client_message);
 
         // Enviar e-mail para a instituição
-        $instituicao_email = get_userdata($instituicao_id)->user_email;
-        $instituicao_message = "Você recebeu um pagamento de doação!\n\n";
+        $instituicao_email = get_userdata($instituicao_id )->user_email;
+        $instituicao_message = "Você recebeu uma nova confirmação de pagamento!\n\n";
         $instituicao_message .= "Cliente: " . get_post_meta($order_id, '_billing_first_name', true) . " " . get_post_meta($order_id, '_billing_last_name', true) . "\n";
-        $instituicao_message .= "Valor pago: R$ " . number_format($donation_amount, 2, ',', '.') . "\n";
-        $instituicao_message .= "Por favor, confira seu extrato bancário.";
-        wp_mail($instituicao_email, 'Pagamento de Doação Recebido', $instituicao_message);
-
-        // Enviar e-mail para o administrador
-        $admin_message = "Doação paga!\n\n";
-        $admin_message .= "Cliente: " . get_post_meta($order_id, '_billing_first_name', true) . " " . get_post_meta($order_id, '_billing_last_name', true) . "\n";
-        $admin_message .= "Instituição: " . $instituicao_nome . "\n";
-        $admin_message .= "Valor pago: R$ " . number_format($donation_amount, 2, ',', '.') . "\n";
-        wp_mail(get_option('admin_email'), 'Pagamento de Doação Confirmado', $admin_message);
+        $instituicao_message .= "Valor da doação: R$ " . number_format($donation_amount, 2, ',', '.') . "\n";
+        wp_mail($instituicao_email, 'Confirmação de Pagamento da Doação', $instituicao_message);
     }
 }
-add_action('woocommerce_order_status_completed', 'cid_change_donation_status');
-
 // Adicionar campo para alterar status da doação na página de edição do pedido
 function cid_add_donation_status_field($order) {
     $donation_status = get_post_meta($order->get_id(), '_order_status', true);
@@ -646,7 +636,7 @@ function cid_view_donations_page() {
                 <?php foreach ($results as $row) : ?>
                     <tr>
                         <td><?php echo esc_html($row->ID); ?></td>
-                                                <td><?php echo esc_html(get_post_meta($row->ID, '_instituicao', true)); ?></td>
+                        <td><?php echo esc_html(get_post_meta($row->ID, '_instituicao', true)); ?></td>
                         <td><?php echo esc_html(get_post_meta($row->ID, '_donation_amount', true)); ?></td>
                         <td><?php echo esc_html(get_post_meta($row->ID, '_order_status', true)); ?></td>
                     </tr>
@@ -764,6 +754,8 @@ function cid_display_total_donations_by_institution() {
     
     echo '</tbody></table>';
 }
+add_action('admin_notices', 'cid_display_total_donations_by_institution');
+add_action('woocommerce_order_status_completed', 'cid_change_donation_status');
 add_action('admin_notices', 'cid_display_total_donations_by_institution');
     wp_enqueue_style('meu-estilo', plugin_dir_url(__FILE__) .'assets/css/eli-silva-donation.css');
     
