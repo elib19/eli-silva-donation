@@ -3,7 +3,7 @@
  * Plugin Name: Painel de Doações
  * Plugin URI: https://github.com/elib19/eli-silva-donation/
  * Description: Plugin para adicionar funcionalidades de doação ao WooCommerce, com seleção de instituição na página do produto e envio de e-mail para o administrador.
- * Version: 1.1.3
+ * Version: 1.1.4
  * Author: Eli Silva
  * Author URI: https://juntoaqui.com.br
  * Text Domain: Painel de Doações
@@ -103,7 +103,7 @@ function cid_instituicao_form() {
         <select name="estado" required>
             <option value="">Estado</option>
             <?php
-            $estados = ['AC', 'AL', 'AP', ' AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
+            $estados = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
             foreach ($estados as $estado) {
                 echo "<option value='$estado'>$estado</option>";
             }
@@ -185,7 +185,7 @@ function cid_process_instituicao_form() {
         update_user_meta($user_id, 'instagram', sanitize_text_field($_POST['instagram']));
         update_user_meta($user_id, 'site_oficial', sanitize_text_field($_POST['site_oficial']));
         update_user_meta($user_id, 'chave_pix', sanitize_text_field($_POST['chave_pix'])); // Salvar chave PIX
-        update_user_meta($user_id, 'uso_das_doacoes', sanitize_textarea_field($_POST['uso_das_doacoes'] )); // Salvar uso das doações
+        update_user_meta($user_id, 'uso_das_doacoes', sanitize_textarea_field($_POST['uso_das_doacoes'])); // Salvar uso das doações
 
         $wpdb->insert($table_name, array(
             'nome' => sanitize_text_field($_POST['nome']),
@@ -262,7 +262,7 @@ function cid_exibir_instituicoes() {
             $uso_das_doacoes = get_user_meta($instituicao->user_id, 'uso_das_doacoes', true);
 
             echo '<div class="instituicao" style="border: 1px solid #ccc; padding: 10px; margin: 10px; width: calc(33.33% - 20px); box-sizing: border-box;">';
-            echo '<h3>' . esc _html($instituicao->nome) . '</h3>';
+            echo '<h3>' . esc_html($instituicao->nome) . '</h3>';
             echo '<p>' . esc_html($instituicao->atividades) . '</p>'; // Exibir atividades
             echo '<p><strong>CNPJ:</strong> ' . esc_html($instituicao->cnpj) . '</p>'; // Exibir CNPJ
             echo '<p><strong>Telefone:</strong> ' . esc_html($instituicao->telefone) . '</p>'; // Exibir Telefone
@@ -335,7 +335,7 @@ add_shortcode('form_depoimento', 'cid_depoimento_form');
 // Processamento do formulário de depoimento
 function cid_process_depoimento_form() {
     if (isset($_POST['submit_depoimento']) && isset($_POST['cid_depoimento_nonce_field']) && wp_verify_nonce($_POST['cid_depoimento_nonce_field'], 'cid_depoimento_nonce')) {
-        if (!is_user_logged_in ()) {
+        if (!is_user_logged_in()) {
             return; // Se não estiver logado, não faz nada
         }
 
@@ -421,7 +421,7 @@ function cid_save_donation_field($order_id) {
         // Enviar e-mail para a instituição
         $message_instituicao = "Você recebeu uma nova doação!\n\n";
         $message_instituicao .= "Cliente: " . get_post_meta($order_id, '_billing_first_name', true) . " " . get_post_meta($order_id, '_billing_last_name', true) . "\n";
- $message_instituicao .= "Valor da doação: R$ " . number_format($donation_amount, 2, ',', '.') . "\n";
+        $message_instituicao .= "Valor da doação: R$ " . number_format($donation_amount, 2, ',', '.') . "\n";
         $message_instituicao .= "A doação pode demorar até 30 dias para ser paga.\n";
         wp_mail($instituicao_email, 'Nova Doação Recebida', $message_instituicao);
 
@@ -500,7 +500,7 @@ function cid_doacoes_page() {
                         <td><?php echo esc_html(get_post_meta($row->ID, '_order_status', true)); ?></td>
                         <td><?php echo esc_html(get_post_meta($row->ID, '_billing_first_name', true) . ' ' . get_post_meta($row->ID, '_billing_last_name', true)); ?></td>
                         <td><?php echo esc_html(get_post_meta($row->ID, '_billing_email', true)); ?></td>
-                        <td><?php echo esc_html(get_user_meta(get_post_meta($row-> ID, '_instituicao', true), 'email', true)); ?></td>
+                        <td><?php echo esc_html(get_user_meta(get_post_meta($row->ID, '_instituicao', true), 'email', true)); ?></td>
                         <td>
                             <?php
                             // Obter a ID da instituição
@@ -564,7 +564,7 @@ function cid_change_donation_status($order_id) {
         $instituicao_message = "Você recebeu um pagamento de doação!\n\n";
         $instituicao_message .= "Cliente: " . get_post_meta($order_id, '_billing_first_name', true) . " " . get_post_meta($order_id, '_billing_last_name', true) . "\n";
         $instituicao_message .= "Valor pago: R$ " . number_format($donation_amount, 2, ',', '.') . "\n";
-        $instit uicao_message .= "Por favor, confira seu extrato bancário.";
+        $instituicao_message .= "Por favor, confira seu extrato bancário.";
         wp_mail($instituicao_email, 'Pagamento de Doação Recebido', $instituicao_message);
 
         // Enviar e-mail para o administrador
@@ -572,47 +572,199 @@ function cid_change_donation_status($order_id) {
         $admin_message .= "Cliente: " . get_post_meta($order_id, '_billing_first_name', true) . " " . get_post_meta($order_id, '_billing_last_name', true) . "\n";
         $admin_message .= "Instituição: " . $instituicao_nome . "\n";
         $admin_message .= "Valor pago: R$ " . number_format($donation_amount, 2, ',', '.') . "\n";
-        wp_mail(get_option('admin_email'), 'Doação Paga', $admin_message);
+        wp_mail(get_option('admin_email'), 'Pagamento de Doação Confirmado', $admin_message);
     }
 }
-add_action('woocommerce_order_status_changed', 'cid_change_donation_status');
+add_action('woocommerce_order_status_completed', 'cid_change_donation_status');
 
-// Adicionar configuração de porcentagem de doação
-function cid_add_settings_page() {
-    add_options_page('Configurações de Doação', 'Doação', 'manage_options', 'cid-doacao-settings', 'cid_doacao_settings_page');
-    add_action('admin_init', 'cid_register_settings');
+// Adicionar campo para alterar status da doação na página de edição do pedido
+function cid_add_donation_status_field($order) {
+    $donation_status = get_post_meta($order->get_id(), '_order_status', true);
+    ?>
+    <div class="form-field">
+        <label for="change_donation_status"><?php _e('Alterar Status da Doação', 'Painel de Doações'); ?></label>
+        <select name="change_donation_status" id="change_donation_status">
+            <option value=""><?php _e('Selecione um status', 'Painel de Doações'); ?></option>
+            <option value="pago" <?php selected($donation_status, 'pago'); ?>><?php _e('Pago', 'Painel de Doações'); ?></option>
+            <option value="pendente" <?php selected($donation_status, 'pendente'); ?>><?php _e('Pendente', 'Painel de Doações'); ?></option>
+        </select>
+    </div>
+    <?php
 }
-add_action('admin_menu', 'cid_add_settings_page');
+add_action('woocommerce_admin_order_data_after_order_details', 'cid_add_donation_status_field');
 
-function cid_register_settings() {
-    register_setting('cid_doacao_options', 'doacao_percentual');
-    add_settings_section('cid_doacao_section', 'Configurações de Doação', null, 'cid_doacao_settings');
-    add_settings_field('doacao_percentual', 'Percentual de Doação', 'cid_doacao_percentual_callback', 'cid_doacao_settings', 'cid_doacao_section');
+// Salvar o status da doação ao atualizar o pedido
+function cid_save_donation_status($order_id) {
+    if (isset($_POST['change_donation_status'])) {
+        update_post_meta($order_id, '_order_status', sanitize_text_field($_POST['change_donation_status']));
+    }
 }
+add_action('woocommerce_process_order_meta', 'cid_save_donation_status');
 
-function cid_doacao_settings_page() {
+// Exibir mensagem de sucesso ao alterar o status da doação
+function cid_order_status_message($order_id) {
+    $donation_status = get_post_meta($order_id, '_order_status', true);
+    if ($donation_status) {
+        echo '<div class="notice notice-success is-dismissible"><p>' . sprintf(__('O status da doação foi alterado para: %s', 'Painel de Doações'), esc_html($donation_status)) . '</p></div>';
+    }
+}
+add_action('woocommerce_order_details_after_order_table', 'cid_order_status_message');
+
+// Adicionar campo para exibir o status da doação na página de detalhes do pedido
+function cid_display_donation_status_in_order_details($order) {
+    $donation_status = get_post_meta($order->get_id(), '_order_status', true);
+    if ($donation_status) {
+        echo '<p><strong>' . __('Status da Doação') . ':</strong> ' . esc_html($donation_status) . '</p>';
+    }
+}
+add_action('woocommerce_order_details_after_order_table', 'cid_display_donation_status_in_order_details');
+
+// Adicionar uma opção para visualizar doações na página de administração
+function cid_add_donation_view_menu() {
+    add_submenu_page('cid-doacoes', 'Visualizar Doações', 'Visualizar Doações', 'manage_options', 'cid-view-doacoes', 'cid_view_donations_page');
+}
+add_action('admin_menu', 'cid_add_donation_view_menu');
+
+function cid_view_donations_page() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'posts'; // Tabela de pedidos
+    $results = $wpdb->get_results("SELECT ID FROM $table_name WHERE post_type = 'shop_order'");
+
     ?>
     <div class="wrap">
-        <h1>Configurações de Doação</h1>
-        <form method="post" action="options.php">
-            <?php
-            settings_fields('cid_doacao_options');
-            do_settings_sections('cid_doacao_settings');
-            submit_button();
-            ?>
-        </form>
+        <h1><?php _e('Visualizar Doações', 'Painel de Doações'); ?></h1>
+        <table class="wp-list-table widefat fixed striped">
+            <thead>
+                <tr>
+                    <th><?php _e('ID do Pedido', 'Painel de Doações'); ?></th>
+                    <th><?php _e('Instituição', 'Painel de Doações'); ?></th>
+                    <th><?php _e('Valor da Doação', 'Painel de Doações'); ?></th>
+                    <th><?php _e('Status da Transação', 'Painel de Doações'); ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($results as $row) : ?>
+                    <tr>
+                        <td><?php echo esc_html($row->ID); ?></td>
+                                                <td><?php echo esc_html(get_post_meta($row->ID, '_instituicao', true)); ?></td>
+                        <td><?php echo esc_html(get_post_meta($row->ID, '_donation_amount', true)); ?></td>
+                        <td><?php echo esc_html(get_post_meta($row->ID, '_order_status', true)); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
     </div>
     <?php
 }
 
-function cid_doacao_percentual_callback() {
-    $percentual = get_option('doacao_percentual', 0); // Alterado para 0%
-    echo '<input type="number" name="doacao_percentual" value="' . esc_attr($percentual) . '" min="0" max="40" /> %';
+// Adicionar aviso de sucesso ao visualizar doações
+function cid_donation_view_success_message() {
+    if (isset($_GET['donation_view']) && $_GET['donation_view'] == 'success') {
+        echo '<div class="notice notice-success is-dismissible"><p>' . __('Doações visualizadas com sucesso.', 'Painel de Doações') . '</p></div>';
+    }
 }
+add_action('admin_notices', 'cid_donation_view_success_message');
 
-// Garantir que o CSS e JS já criados estejam funcionando
-add_action('wp_enqueue_scripts', function() {
-    // Enqueue seu CSS
+// Adicionar um campo para filtrar doações por status na página de visualização
+function cid_add_donation_filter() {
+    ?>
+    <form method="GET" action="">
+        <input type="hidden" name="page" value="cid-view-doacoes">
+        <select name="donation_status">
+            <option value=""><?php _e('Todos os Status', 'Painel de Doações'); ?></option>
+            <option value="pago"><?php _e('Pago', 'Painel de Doações'); ?></option>
+            <option value="pendente"><?php _e('Pendente', 'Painel de Doações'); ?></option>
+        </select>
+        <input type="submit" value="<?php _e('Filtrar', 'Painel de Doações'); ?>">
+    </form>
+    <?php
+}
+add_action('cid_view_donations_page', 'cid_add_donation_filter');
+
+// Modificar a consulta para filtrar doações com base no status selecionado
+function cid_filter_donations_by_status($query) {
+    if (is_admin() && isset($_GET['page']) && $_GET['page'] == 'cid-view-doacoes' && isset($_GET['donation_status']) && $_GET['donation_status'] != '') {
+        $status = sanitize_text_field($_GET['donation_status']);
+        $query->where .= " AND post_status = '$status'";
+    }
+}
+add_action('pre_get_posts', 'cid_filter_donations_by_status');
+
+// Adicionar um campo para exibir a data da doação na tabela de visualização
+function cid_add_donation_date_column($columns) {
+    $columns['donation_date'] = __('Data da Doação', 'Painel de Doações');
+    return $columns;
+}
+add_filter('manage_edit-shop_order_columns', 'cid_add_donation_date_column');
+
+// Preencher a coluna de data da doação
+function cid_fill_donation_date_column($column, $post_id) {
+    if ($column === 'donation_date') {
+        $date = get_post_meta($post_id, '_donation_date', true);
+        echo esc_html($date ? date('d/m/Y H:i', strtotime($date)) : 'N/A');
+    }
+}
+add_action('manage_shop_order_posts_custom_column', 'cid_fill_donation_date_column', 10, 2);
+
+// Adicionar um campo para registrar a data da doação ao salvar o pedido
+function cid_save_donation_date($order_id) {
+    if (isset($_POST['change_donation_status'])) {
+        $donation_date = current_time('mysql');
+        update_post_meta($order_id, '_donation_date', $donation_date);
+    }
+}
+add_action('woocommerce_process_order_meta', 'cid_save_donation_date');
+
+// Adicionar um campo para exibir a data da doação na página de detalhes do pedido
+function cid_display_donation_date_in_order_details($order) {
+    $donation_date = get_post_meta($order->get_id(), '_donation_date', true);
+    if ($donation_date) {
+        echo '<p><strong>' . __('Data da Doação') . ':</strong> ' . esc_html(date('d/m/Y H:i', strtotime($donation_date))) . '</p>';
+    }
+}
+add_action('woocommerce_order_details_after_order_table', 'cid_display_donation_date_in_order_details');
+
+// Adicionar um campo para exibir a data da doação na página de administração das doações
+function cid_add_donation_date_column_admin($columns) {
+    $columns['donation_date'] = __('Data da Doação', 'Painel de Doações');
+    return $columns;
+}
+add_filter('manage_cid-doacoes_columns', 'cid_add_donation_date_column_admin');
+
+// Preencher a coluna de data da doação na administração
+function cid_fill_donation_date_column_admin($column, $post_id) {
+    if ($column === 'donation_date') {
+        $date = get_post_meta($post_id, '_donation_date', true);
+        echo esc_html($date ? date('d/m/Y H:i', strtotime($date)) : 'N/A');
+    }
+}
+add_action('manage_cid-doacoes_posts_custom_column', 'cid_fill_donation_date_column_admin', 10, 2);
+
+// Adicionar um campo para exibir o total de doações na página de administração
+function cid_display_total_donations() {
+    global $wpdb;
+    $total_donations = $wpdb->get_var("SELECT SUM(meta_value) FROM {$wpdb->prefix}postmeta WHERE meta_key = '_donation_amount'");
+    echo '<h2>' . __('Total de Doações Recebidas: R$ ', 'Painel de Doações') . number_format($total_donations, 2, ',', '.') . '</h2>';
+}
+add_action('admin_notices', 'cid_display_total_donations');
+
+// Adicionar um campo para exibir o total de doações por instituição
+function cid_display_total_donations_by_institution() {
+    global $wpdb;
+    $instituicoes = $wpdb->get_results("SELECT user_id, SUM(meta_value) as total FROM {$wpdb->prefix}postmeta WHERE meta_key = '_donation_amount' GROUP BY user_id");
+    
+    echo '<h2>' . __('Total de Doações por Instituição', 'Painel de Doações') . '</h2>';
+    echo '<table class="wp-list-table widefat fixed striped">';
+    echo '<thead><tr><th>' . __('Instituição', 'Painel de Doações') . '</th><th>' . __('Total de Doações', 'Painel de Doações') . '</th></tr></thead><tbody>';
+    
+    foreach ($instituicoes as $instituicao) {
+        $user_info = get_userdata($instituicao->user_id);
+        echo '<tr><td>' . esc_html($user_info->display_name) . '</td><td>R$ ' . number_format($instituicao->total, 2, ',', '.') . '</td></tr>';
+    }
+    
+    echo '</tbody></table>';
+}
+add_action('admin_notices', 'cid_display_total_donations_by_institution');
     wp_enqueue_style('meu-estilo', plugin_dir_url(__FILE__) .'assets/css/eli-silva-donation.css');
     
     // Enqueue seu JS
