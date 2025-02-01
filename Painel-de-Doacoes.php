@@ -378,19 +378,6 @@ function cid_add_donation_field_to_product() {
 }
 add_action('woocommerce_before_add_to_cart_button', 'cid_add_donation_field_to_product');
 
-// Validar a seleção da instituição antes de adicionar ao carrinho
-function cid_validate_donation_field($passed, $product_id) {
-    $instituicoes = cid_get_instituicoes();
-    $is_instituicoes_empty = count($instituicoes) <= 1; // Se não houver instituições cadastradas, a opção padrão é a única
-
-    if (!$is_instituicoes_empty && isset($_POST['instituicao']) && empty($_POST['instituicao'])) {
-        wc_add_notice(__('Por favor, escolha uma instituição para doação.'), 'error');
-        return false;
-    }
-    return $passed;
-}
-add_filter('woocommerce_add_to_cart_validation', 'cid_validate_donation_field', 10, 2);
-
 // Salvar instituição escolhida no pedido
 function cid_save_donation_field($order_id) {
     if (isset($_POST['instituicao']) && !empty($_POST['instituicao'])) {
@@ -437,15 +424,15 @@ add_action('woocommerce_checkout_update_order_meta', 'cid_save_donation_field');
 
 // Exibir instituição escolhida e valor da doação na administração do WooCommerce
 function cid_display_donation_in_order_admin($order) {
-    $instituicao = get_post_meta($order->get_id(), '_instituicao', true);
+    $instituicao_id = get_post_meta($order->get_id(), '_instituicao', true);
     $donation_amount = get_post_meta($order->get_id(), '_donation_amount', true);
-    if ($instituicao) {
-        echo '<p><strong>' . __('Instituição para Doação') . ':</strong> ' . esc_html($instituicao) . '</p>';
+    if ($instituicao_id) {
+        $instituicao_nome = get_userdata($instituicao_id)->display_name;
+        echo '<p><strong>' . __('Instituição para Doação') . ':</strong> ' . esc_html($instituicao_nome) . '</p>';
         echo '<p><strong>' . __('Valor da Doação') . ':</strong> R$ ' . number_format($donation_amount, 2, ',', '.') . '</p>';
     }
 }
 add_action('woocommerce_admin_order_data_after_billing_address', 'cid_display_donation_in_order_admin');
-
 // Obter instituições para o campo de seleção
 function cid_get_instituicoes() {
     $instituicoes = array();
